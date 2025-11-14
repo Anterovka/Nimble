@@ -281,15 +281,42 @@ function BlockEditModal({
     onSave(formData);
   };
 
+  const handleBackdropClick = (e: React.MouseEvent<HTMLDivElement>) => {
+    if (e.target === e.currentTarget) {
+      onClose();
+    }
+  };
+
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999] p-4">
-      <div className="bg-white/5 border border-white/10 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl backdrop-blur-xl">
-        <div className="p-6 border-b border-white/10 shrink-0">
+    <div 
+      className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-[99999] p-4"
+      onClick={handleBackdropClick}
+    >
+      <div 
+        className="bg-white/5 border border-white/10 rounded-2xl max-w-4xl w-full max-h-[90vh] flex flex-col shadow-2xl backdrop-blur-xl"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="p-6 border-b border-white/10 shrink-0 flex items-center justify-between">
           <h2 className="text-2xl font-bold text-white">
             {isCreating ? 'Создание блока' : 'Редактирование блока'}
           </h2>
+          <button
+            type="button"
+            onClick={onClose}
+            className="text-white/60 hover:text-white transition-colors p-2 hover:bg-white/5 rounded-lg"
+            aria-label="Закрыть"
+          >
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M18 6 6 18" />
+              <path d="m6 6 12 12" />
+            </svg>
+          </button>
         </div>
-        <div className="overflow-y-auto flex-1">
+        <div 
+          className="overflow-y-auto flex-1 min-h-0" 
+          style={{ scrollBehavior: 'smooth' }}
+          onWheel={(e) => e.stopPropagation()}
+        >
           <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div className="grid grid-cols-2 gap-4">
             <div>
@@ -321,11 +348,14 @@ function BlockEditModal({
               <select
                 value={formData.category}
                 onChange={(e) => setFormData({ ...formData, category: e.target.value })}
-                className="w-full px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white backdrop-blur-sm hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+                className="w-full px-4 py-2.5 bg-[#1a1a1a] border border-white/10 rounded-xl text-white backdrop-blur-sm hover:border-white/20 focus:outline-none focus:ring-2 focus:ring-white/20 transition-colors"
+                style={{
+                  colorScheme: 'dark'
+                }}
                 required
               >
                 {CATEGORIES.map(cat => (
-                  <option key={cat} value={cat}>{cat}</option>
+                  <option key={cat} value={cat} style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>{cat}</option>
                 ))}
               </select>
             </div>

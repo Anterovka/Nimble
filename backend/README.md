@@ -121,6 +121,27 @@ ZIP → распаковка → SSH → загрузка файлов → Nginx
 
 Безопасность: валидация host/credentials, таймауты, проверка размеров
 
+### Frontend интеграция
+
+Frontend (Next.js) взаимодействует с API через:
+
+**API Client** (`frontend/app/lib/api.ts`):
+- Базовый URL: `NEXT_PUBLIC_API_URL` или `http://localhost:8000/api`
+- JWT токены в `Authorization: Bearer {token}` (из localStorage)
+- Автоматическая обработка ошибок и обновление токенов
+
+**Основные модули:**
+- `auth.ts` - регистрация, вход, выход, управление токенами
+- `projects.ts` - CRUD проектов, экспорт, публикация
+- `blocks.ts` - загрузка кастомных блоков для редактора
+- `subscription.ts` - информация о подписке
+
+**Редактор:**
+- GrapesJS инициализируется через `initEditor()` (`frontend/app/utils/editor/initEditor.ts`)
+- Встроенные блоки регистрируются из `blocks.ts`
+- Кастомные блоки загружаются через API при инициализации
+- Автосохранение проекта через `json_content` (GrapesJS данные)
+
 ## Админ-панель
 
 `http://localhost:8000/admin/` (логин: `admin`, пароль: `admin` в Docker)
