@@ -8,9 +8,10 @@ interface ThemeModalProps {
   isOpen: boolean;
   onClose: () => void;
   editor: Editor | null;
+  projectId?: number | null;
 }
 
-export function ThemeModal({ isOpen, onClose, editor }: ThemeModalProps) {
+export function ThemeModal({ isOpen, onClose, editor, projectId }: ThemeModalProps) {
   const contentRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -46,32 +47,32 @@ export function ThemeModal({ isOpen, onClose, editor }: ThemeModalProps) {
   }
 
   return (
-    <div className="editor-theme-modal" role="dialog" aria-modal="true">
-      <div className="editor-theme-modal__backdrop" aria-hidden="true" onClick={onClose} />
-      <div className="editor-theme-modal__content" ref={contentRef} role="document">
-        <header className="editor-theme-modal__header">
-          <div className="editor-theme-modal__header-copy">
-            <h2>Темы проекта</h2>
-            <p>Выберите готовую тему для всего проекта</p>
+    <div className="theme-modal-overlay">
+      <div className="theme-modal-backdrop" onClick={onClose} />
+      <div className="theme-modal-container" ref={contentRef}>
+        <div className="theme-modal-header">
+          <div className="theme-modal-title-group">
+            <h2 className="theme-modal-title">Палитры проекта</h2>
+            <p className="theme-modal-subtitle">Выберите цветовую схему для всего проекта</p>
           </div>
           <button
             type="button"
-            className="editor-theme-modal__close"
+            className="theme-modal-close"
             onClick={onClose}
-            aria-label="Закрыть модальное окно тем"
+            aria-label="Закрыть"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-              <path d="M18 6 6 18" />
-              <path d="m6 6 12 12" />
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <line x1="18" y1="6" x2="6" y2="18" />
+              <line x1="6" y1="6" x2="18" y2="18" />
             </svg>
           </button>
-        </header>
-        <div className="editor-theme-modal__body">
+        </div>
+        <div className="theme-modal-content">
           {editor ? (
-            <ThemePanel editor={editor} />
+            <ThemePanel editor={editor} projectId={projectId} onClose={onClose} />
           ) : (
-            <div className="editor-theme-modal__empty">
-              <p>Выберите элемент в конструкторе, чтобы применить тему.</p>
+            <div className="theme-modal-empty">
+              <p>Редактор не загружен</p>
             </div>
           )}
         </div>
@@ -79,5 +80,3 @@ export function ThemeModal({ isOpen, onClose, editor }: ThemeModalProps) {
     </div>
   );
 }
-
-

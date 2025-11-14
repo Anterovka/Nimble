@@ -73,18 +73,16 @@ export const creativePortfolioTemplate: Template = {
         <p style="color: #666;">Создаю визуальные решения</p>
       </div>
       <div style="display: flex; gap: 2rem;">
-        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Instagram</a>
+        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">ВКонтакте</a>
         <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Behance</a>
-        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Dribbble</a>
-        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">LinkedIn</a>
+        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Figma</a>
+        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Telegram</a>
       </div>
     </div>
   </footer>
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif; }
-button:hover, div[style*="cursor: pointer"]:hover { }
-a:hover { opacity: 0.7; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h1 { font-size: 3rem !important; line-height: 1.1 !important; }

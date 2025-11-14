@@ -7,25 +7,29 @@ import { apiClient } from "@/app/lib/api";
 import { AppHeader } from "@/app/components/AppHeader";
 import { StaticStarField } from "@/app/components/StaticStarField";
 
+// Доступные категории блоков
 const CATEGORIES = ['Базовые', 'Структура', 'Формы', 'Медиа', 'Навигация', 'Другое'];
 
+// Основная страница администрирования блоков
 export default function BlocksAdminPage() {
   const { user } = useAuth();
+  
+  // Состояния компонента
   const [blocks, setBlocks] = useState<CustomBlockList[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editingBlock, setEditingBlock] = useState<CustomBlock | null>(null);
   const [isCreating, setIsCreating] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-
-  // Проверка прав суперпользователя
   const [isSuperuser, setIsSuperuser] = useState(false);
 
+  // Инициализация: проверка прав и загрузка блоков
   useEffect(() => {
     checkSuperuser();
     loadBlocks();
   }, []);
 
+  // Проверка прав суперпользователя
   const checkSuperuser = async () => {
     try {
       const profile = await apiClient.get<any>('/auth/profile/');
@@ -36,12 +40,12 @@ export default function BlocksAdminPage() {
     }
   };
 
+  // Загрузка списка блоков
   const loadBlocks = async () => {
     try {
       setLoading(true);
       setError(null);
       const data = await getBlocks(selectedCategory || undefined, isSuperuser ? undefined : true);
-      // Убеждаемся, что data - это массив
       if (Array.isArray(data)) {
         setBlocks(data);
       } else {
@@ -51,16 +55,18 @@ export default function BlocksAdminPage() {
       }
     } catch (err: any) {
       setError(err.message || 'Ошибка загрузки блоков');
-      setBlocks([]); // Устанавливаем пустой массив при ошибке
+      setBlocks([]);
     } finally {
       setLoading(false);
     }
   };
 
+  // Перезагрузка при изменении категории или прав
   useEffect(() => {
     loadBlocks();
   }, [selectedCategory, isSuperuser]);
 
+  // Обработчики действий
   const handleCreate = () => {
     setEditingBlock({
       id: 0,
@@ -120,6 +126,7 @@ export default function BlocksAdminPage() {
     }
   };
 
+  // Проверка авторизации
   if (!user) {
     return (
       <div className="min-h-screen bg-linear-to-b from-[#050505] to-[#000000] text-white flex items-center justify-center relative overflow-hidden">
@@ -132,6 +139,7 @@ export default function BlocksAdminPage() {
     );
   }
 
+  // Проверка прав доступа
   if (!isSuperuser) {
     return (
       <div className="min-h-screen bg-linear-to-b from-[#050505] to-[#000000] text-white flex items-center justify-center relative overflow-hidden">
@@ -144,6 +152,7 @@ export default function BlocksAdminPage() {
     );
   }
 
+  // Основной рендер страницы
   return (
     <div className="min-h-screen bg-linear-to-b from-[#050505] to-[#000000] text-white relative overflow-hidden">
       <StaticStarField starCount={120} />
@@ -251,6 +260,7 @@ export default function BlocksAdminPage() {
         </div>
       </div>
       
+      {/* Модальное окно редактирования/создания блока */}
       {editingBlock && (
         <BlockEditModal
           block={editingBlock}
@@ -266,6 +276,7 @@ export default function BlocksAdminPage() {
   );
 }
 
+// Модальное окно для редактирования и создания блоков
 function BlockEditModal({
   block,
   isCreating,
@@ -279,6 +290,7 @@ function BlockEditModal({
 }) {
   const [formData, setFormData] = useState<CustomBlock>(block);
 
+  // Обработчики формы
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     onSave(formData);
@@ -458,4 +470,3 @@ function BlockEditModal({
     </div>
   );
 }
-

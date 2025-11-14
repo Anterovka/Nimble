@@ -120,4 +120,3 @@ export function formatCSS(css: string): string {
   
   return formatted.trim();
 }
-

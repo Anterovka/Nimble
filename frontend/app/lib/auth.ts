@@ -38,32 +38,27 @@ const TOKEN_KEY = 'access_token';
 const REFRESH_TOKEN_KEY = 'refresh_token';
 const USER_KEY = 'user';
 
-// Сохранение токенов в localStorage
 export function saveTokens(tokens: AuthTokens): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(TOKEN_KEY, tokens.access);
   localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refresh);
 }
 
-// Получение access токена
 export function getAccessToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(TOKEN_KEY);
 }
 
-// Получение refresh токена
 export function getRefreshToken(): string | null {
   if (typeof window === 'undefined') return null;
   return localStorage.getItem(REFRESH_TOKEN_KEY);
 }
 
-// Сохранение пользователя
 export function saveUser(user: User): void {
   if (typeof window === 'undefined') return;
   localStorage.setItem(USER_KEY, JSON.stringify(user));
 }
 
-// Получение пользователя
 export function getUser(): User | null {
   if (typeof window === 'undefined') return null;
   const userStr = localStorage.getItem(USER_KEY);
@@ -75,7 +70,6 @@ export function getUser(): User | null {
   }
 }
 
-// Очистка всех данных аутентификации
 export function clearAuth(): void {
   if (typeof window === 'undefined') return;
   localStorage.removeItem(TOKEN_KEY);
@@ -83,12 +77,10 @@ export function clearAuth(): void {
   localStorage.removeItem(USER_KEY);
 }
 
-// Проверка, авторизован ли пользователь
 export function isAuthenticated(): boolean {
   return getAccessToken() !== null;
 }
 
-// Регистрация
 export async function register(data: RegisterData): Promise<AuthResponse> {
   const response = await apiClient.post<AuthResponse>('/auth/register/', data);
   if (response.access && response.refresh) {
@@ -100,7 +92,6 @@ export async function register(data: RegisterData): Promise<AuthResponse> {
   return response;
 }
 
-// Вход
 export async function login(credentials: LoginCredentials): Promise<AuthResponse> {
   const response = await apiClient.post<AuthResponse>('/auth/login/', credentials);
   if (response.access && response.refresh) {
@@ -112,12 +103,10 @@ export async function login(credentials: LoginCredentials): Promise<AuthResponse
   return response;
 }
 
-// Выход
 export function logout(): void {
   clearAuth();
 }
 
-// Обновление токена
 export async function refreshToken(): Promise<AuthTokens | null> {
   const refresh = getRefreshToken();
   if (!refresh) return null;
@@ -134,27 +123,6 @@ export async function refreshToken(): Promise<AuthTokens | null> {
   }
 }
 
-// Получение профиля пользователя
 export async function getProfile(): Promise<User> {
   return apiClient.get<User>('/auth/profile/');
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

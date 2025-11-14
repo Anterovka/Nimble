@@ -5,7 +5,7 @@ const createBlockPreview = (content: string | { type: string; src?: string }, la
   
   if (typeof content === "object" && content.type === "image") {
     previewHtml = `
-      <div style="display:flex;align-items:center;justify-content:center;width:100%;height:100%;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;">
+      <div style="display:flex;align-items:center;justify-content:center;width:100%;min-height:60px;padding:12px;background:#ffffff;border:1px solid #e0e0e0;border-radius:8px;">
         <div style="text-align:center;color:#666;font-size:10px;">📷 Изображение</div>
       </div>
     `;
@@ -15,74 +15,74 @@ const createBlockPreview = (content: string | { type: string; src?: string }, la
     const previewText = textMatch ? textMatch[1].substring(0, 30) : label;
     
     if (contentStr.includes("<h1")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><h1 style="margin:0;font-size:18px;font-weight:700;color:#000;">${previewText}</h1></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><h1 style="margin:0;font-size:18px;font-weight:700;color:#000;">${previewText}</h1></div>`;
     } else if (contentStr.includes("<h2")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><h2 style="margin:0;font-size:16px;font-weight:600;color:#000;">${previewText}</h2></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><h2 style="margin:0;font-size:16px;font-weight:600;color:#000;">${previewText}</h2></div>`;
     } else if (contentStr.includes("<h3")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><h3 style="margin:0;font-size:14px;font-weight:600;color:#000;">${previewText}</h3></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><h3 style="margin:0;font-size:14px;font-weight:600;color:#000;">${previewText}</h3></div>`;
     } else if (contentStr.includes("<button")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;"><button style="padding:8px 16px;background:#000;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;">${previewText || "Кнопка"}</button></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><button style="padding:8px 16px;background:#000;color:#fff;border:none;border-radius:8px;font-size:11px;font-weight:600;">${previewText || "Кнопка"}</button></div>`;
     } else if (contentStr.includes("<a")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><a href="#" style="color:#000;text-decoration:underline;font-size:12px;">${previewText || "Ссылка"}</a></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><a href="#" style="color:#000;text-decoration:underline;font-size:12px;">${previewText || "Ссылка"}</a></div>`;
     } else if (contentStr.includes("<ul") || contentStr.includes("<ol")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><ul style="margin:0;padding-left:16px;font-size:11px;color:#000;"><li>${previewText || "Элемент списка"}</li></ul></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><ul style="margin:0;padding-left:16px;font-size:11px;color:#000;"><li>${previewText || "Элемент списка"}</li></ul></div>`;
     } else if (contentStr.includes("<div") && contentStr.includes("row")) {
       const cellCount = (contentStr.match(/class="cell"/g) || []).length;
       if (cellCount === 1) {
-        previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:flex;gap:4px;"><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
+        previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:4px;width:100%;max-width:200px;"><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
       } else if (cellCount === 3) {
-        previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:flex;gap:4px;"><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
+        previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:4px;width:100%;max-width:200px;"><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
       } else {
-        previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:flex;gap:4px;"><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
+        previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:4px;width:100%;max-width:200px;"><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="flex:1;height:40px;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
       }
     } else if (contentStr.includes("blockquote")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><blockquote style="margin:0;padding-left:12px;border-left:3px solid #000;font-style:italic;color:#000;font-size:11px;">${previewText}</blockquote></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><blockquote style="margin:0;padding-left:12px;border-left:3px solid #000;font-style:italic;color:#000;font-size:11px;">${previewText}</blockquote></div>`;
     } else if (contentStr.includes("<hr")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><hr style="border:none;border-top:2px solid #000;margin:0;"></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><hr style="border:none;border-top:2px solid #000;margin:0;width:100%;"></div>`;
     } else if (contentStr.includes("<table")) {
-      previewHtml = `<div style="background:#ffffff;padding:8px;border-radius:8px;border:1px solid #e0e0e0;"><table style="width:100%;font-size:9px;border-collapse:collapse;"><tr style="background:#000;color:#fff;"><th style="padding:4px;border:1px solid #000;">1</th><th style="padding:4px;border:1px solid #000;">2</th></tr><tr><td style="padding:4px;border:1px solid #000;">A</td><td style="padding:4px;border:1px solid #000;">B</td></tr></table></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:8px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><table style="width:100%;font-size:9px;border-collapse:collapse;"><tr style="background:#000;color:#fff;"><th style="padding:4px;border:1px solid #000;">1</th><th style="padding:4px;border:1px solid #000;">2</th></tr><tr><td style="padding:4px;border:1px solid #000;">A</td><td style="padding:4px;border:1px solid #000;">B</td></tr></table></div>`;
     } else if (contentStr.includes("<form") || contentStr.includes("<input") || contentStr.includes("<textarea") || contentStr.includes("<select")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><input type="text" placeholder="Поле ввода" style="width:100%;padding:6px;border:1px solid #000;border-radius:6px;font-size:10px;box-sizing:border-box;"></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><input type="text" placeholder="Поле ввода" style="width:100%;max-width:200px;padding:6px;border:1px solid #000;border-radius:6px;font-size:10px;box-sizing:border-box;"></div>`;
     } else if (contentStr.includes("card") || contentStr.includes("data-surface")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="background:#f5f5f5;padding:10px;border-radius:6px;border:1px solid #ddd;"><div style="font-size:11px;font-weight:600;color:#000;margin-bottom:4px;">Заголовок</div><div style="font-size:10px;color:#666;">Описание</div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="background:#f5f5f5;padding:10px;border-radius:6px;border:1px solid #ddd;width:100%;max-width:200px;"><div style="font-size:11px;font-weight:600;color:#000;margin-bottom:4px;">Заголовок</div><div style="font-size:10px;color:#666;">Описание</div></div></div>`;
     } else if (contentStr.includes("grid") && contentStr.includes("template-columns")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;"><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:4px;width:100%;max-width:200px;"><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:4px;"></div></div></div>`;
     } else if (contentStr.includes("border-radius:50%") && contentStr.includes("width:64px")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;gap:8px;"><div style="width:32px;height:32px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">A</div><div><div style="font-size:11px;font-weight:600;color:#000;">Имя</div><div style="font-size:10px;color:#666;">Описание</div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;"><div style="width:32px;height:32px;border-radius:50%;background:#000;color:#fff;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:600;">A</div><div><div style="font-size:11px;font-weight:600;color:#000;">Имя</div><div style="font-size:10px;color:#666;">Описание</div></div></div>`;
     } else if (contentStr.includes("progress") || contentStr.includes("width:60%")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="width:100%;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;"><div style="width:60%;height:100%;background:#000;border-radius:3px;"></div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="width:100%;max-width:200px;height:6px;background:#f0f0f0;border-radius:3px;overflow:hidden;"><div style="width:60%;height:100%;background:#000;border-radius:3px;"></div></div></div>`;
     } else if (contentStr.includes("★") || contentStr.includes("rating")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:2px;color:#ffd700;font-size:14px;">★★★★★</div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:2px;color:#ffd700;font-size:14px;">★★★★★</div></div>`;
     } else if (contentStr.includes("details") || contentStr.includes("summary")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="padding:8px;background:#f5f5f5;border-bottom:1px solid #000;font-weight:600;font-size:11px;margin-bottom:4px;">Вопрос</div><div style="padding:8px;background:#fff;font-size:10px;color:#000;">Ответ</div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="width:100%;max-width:200px;"><div style="padding:8px;background:#f5f5f5;border-bottom:1px solid #000;font-weight:600;font-size:11px;margin-bottom:4px;">Вопрос</div><div style="padding:8px;background:#fff;font-size:10px;color:#000;">Ответ</div></div></div>`;
     } else if (contentStr.includes("dialog") || contentStr.includes("modal")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="font-weight:600;margin-bottom:6px;font-size:11px;color:#000;">Заголовок</div><div style="font-size:10px;color:#000;margin-bottom:8px;">Содержимое</div><button style="padding:6px 12px;background:#000;color:#fff;border:none;border-radius:4px;font-size:10px;">Закрыть</button></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="width:100%;max-width:200px;"><div style="font-weight:600;margin-bottom:6px;font-size:11px;color:#000;">Заголовок</div><div style="font-size:10px;color:#000;margin-bottom:8px;">Содержимое</div><button style="padding:6px 12px;background:#000;color:#fff;border:none;border-radius:4px;font-size:10px;width:100%;">Закрыть</button></div></div>`;
     } else if (contentStr.includes("testimonial") || (contentStr.includes("font-style:italic") && contentStr.includes("Иван"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="font-size:10px;margin-bottom:6px;color:#666;font-style:italic;">"Отзыв клиента"</div><div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:24px;background:#000;border-radius:50%;"></div><div><div style="font-size:10px;font-weight:600;color:#000;">Имя</div><div style="font-size:9px;color:#666;">Должность</div></div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="width:100%;max-width:200px;"><div style="font-size:10px;margin-bottom:6px;color:#666;font-style:italic;">"Отзыв клиента"</div><div style="display:flex;align-items:center;gap:6px;"><div style="width:24px;height:24px;background:#000;border-radius:50%;"></div><div><div style="font-size:10px;font-weight:600;color:#000;">Имя</div><div style="font-size:9px;color:#666;">Должность</div></div></div></div></div>`;
     } else if (contentStr.includes("pricing") || (contentStr.includes("$99") && contentStr.includes("тариф"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="font-weight:600;margin-bottom:6px;font-size:11px;color:#000;">Тариф</div><div style="font-size:16px;font-weight:700;margin-bottom:8px;color:#000;">$99</div><button style="padding:6px 12px;background:#000;color:#fff;border:none;border-radius:4px;font-size:10px;width:100%;">Выбрать</button></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="width:100%;max-width:200px;"><div style="font-weight:600;margin-bottom:6px;font-size:11px;color:#000;">Тариф</div><div style="font-size:16px;font-weight:700;margin-bottom:8px;color:#000;">$99</div><button style="padding:6px 12px;background:#000;color:#fff;border:none;border-radius:4px;font-size:10px;width:100%;">Выбрать</button></div></div>`;
     } else if (contentStr.includes("timeline") || (contentStr.includes("position:relative") && contentStr.includes("width:2px"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:flex;gap:8px;"><div style="width:2px;background:#000;flex-shrink:0;"></div><div><div style="width:8px;height:8px;background:#000;border-radius:50%;margin:-4px 0 0 -5px;"></div><div style="font-size:10px;margin-top:4px;color:#000;">Событие</div></div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:8px;width:100%;max-width:200px;"><div style="width:2px;background:#000;flex-shrink:0;"></div><div><div style="width:8px;height:8px;background:#000;border-radius:50%;margin:-4px 0 0 -5px;"></div><div style="font-size:10px;margin-top:4px;color:#000;">Событие</div></div></div></div>`;
     } else if (contentStr.includes("spinner") || contentStr.includes("animation:spin")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;"><div style="width:24px;height:24px;border:2px solid #f0f0f0;border-top:2px solid #000;border-radius:50%;animation:spin 1s linear infinite;"></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="width:24px;height:24px;border:2px solid #f0f0f0;border-top:2px solid #000;border-radius:50%;animation:spin 1s linear infinite;"></div></div>`;
     } else if (contentStr.includes("breadcrumb") || (contentStr.includes("nav") && contentStr.includes("/"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:flex;gap:6px;font-size:10px;color:#666;"><span>Главная</span><span>/</span><span>Раздел</span><span>/</span><span>Страница</span></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;gap:6px;font-size:10px;color:#666;"><span>Главная</span><span>/</span><span>Раздел</span><span>/</span><span>Страница</span></div></div>`;
     } else if (contentStr.includes("pagination") || (contentStr.includes("button") && contentStr.includes("→"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;gap:4px;"><button style="padding:6px 10px;background:#000;color:#fff;border:none;border-radius:4px;font-size:10px;">1</button><button style="padding:6px 10px;background:#fff;border:1px solid #000;border-radius:4px;font-size:10px;">2</button><button style="padding:6px 10px;background:#fff;border:1px solid #000;border-radius:4px;font-size:10px;">3</button></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;gap:4px;"><button style="padding:6px 10px;background:#000;color:#fff;border:none;border-radius:4px;font-size:10px;">1</button><button style="padding:6px 10px;background:#fff;border:1px solid #000;border-radius:4px;font-size:10px;">2</button><button style="padding:6px 10px;background:#fff;border:1px solid #000;border-radius:4px;font-size:10px;">3</button></div>`;
     } else if (contentStr.includes("alert") || contentStr.includes("⚠️") || contentStr.includes("✓") || contentStr.includes("✕")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="padding:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;color:#856404;font-size:10px;">⚠️ Уведомление</div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="padding:8px;background:#fff3cd;border:1px solid #ffc107;border-radius:6px;color:#856404;font-size:10px;">⚠️ Уведомление</div></div>`;
     } else if (contentStr.includes("social") || (contentStr.includes("border-radius:50%") && contentStr.includes("f") && contentStr.includes("t"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;gap:6px;"><div style="width:28px;height:28px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">f</div><div style="width:28px;height:28px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">t</div><div style="width:28px;height:28px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">in</div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;gap:6px;"><div style="width:28px;height:28px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">f</div><div style="width:28px;height:28px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">t</div><div style="width:28px;height:28px;background:#000;border-radius:50%;display:flex;align-items:center;justify-content:center;color:#fff;font-size:10px;font-weight:700;">in</div></div>`;
     } else if (contentStr.includes("navbar") || (contentStr.includes("nav") && contentStr.includes("Логотип"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="display:flex;justify-content:space-between;align-items:center;"><div style="font-weight:700;font-size:11px;color:#000;">Логотип</div><div style="display:flex;gap:8px;font-size:10px;color:#000;"><span>Главная</span><span>О нас</span><span>Контакты</span></div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="display:flex;justify-content:space-between;align-items:center;width:100%;max-width:200px;"><div style="font-weight:700;font-size:11px;color:#000;">Логотип</div><div style="display:flex;gap:8px;font-size:10px;color:#000;"><span>Главная</span><span>О нас</span><span>Контакты</span></div></div></div>`;
     } else if (contentStr.includes("footer") || (contentStr.includes("©") && contentStr.includes("Все права"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="background:#000;color:#fff;padding:10px;border-radius:6px;"><div style="font-weight:700;margin-bottom:6px;font-size:11px;">Компания</div><div style="font-size:9px;opacity:0.7;">© 2024 Все права защищены</div></div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="background:#000;color:#fff;padding:10px;border-radius:6px;width:100%;max-width:200px;"><div style="font-weight:700;margin-bottom:6px;font-size:11px;">Компания</div><div style="font-size:9px;opacity:0.7;">© 2024 Все права защищены</div></div></div>`;
     } else if (contentStr.includes("pre") || contentStr.includes("code") || contentStr.includes("monospace")) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="background:#1e1e1e;color:#d4d4d4;padding:8px;border-radius:6px;font-family:monospace;font-size:9px;overflow-x:auto;">const code = "example";</div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="background:#1e1e1e;color:#d4d4d4;padding:8px;border-radius:6px;font-family:monospace;font-size:9px;overflow-x:auto;width:100%;max-width:200px;">const code = "example";</div></div>`;
     } else if (contentStr.includes("tooltip") || (contentStr.includes("border-bottom:2px dotted"))) {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;display:flex;align-items:center;justify-content:center;"><span style="border-bottom:1px dotted #000;cursor:help;color:#000;font-size:11px;">Наведите</span></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><span style="border-bottom:1px dotted #000;cursor:help;color:#000;font-size:11px;">Наведите</span></div>`;
     } else {
-      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;"><div style="font-size:12px;color:#000;line-height:1.4;">${previewText || label}</div></div>`;
+      previewHtml = `<div style="background:#ffffff;padding:12px;border-radius:8px;border:1px solid #e0e0e0;width:100%;display:flex;align-items:center;justify-content:center;"><div style="font-size:12px;color:#000;line-height:1.4;text-align:center;">${previewText || label}</div></div>`;
     }
   }
   
@@ -118,6 +118,7 @@ export function registerBlocks(editor: Editor) {
 
   editor.BlockManager.getAll().reset();
 
+  // ========== БАЗОВЫЕ ЭЛЕМЕНТЫ (самые часто используемые) ==========
   addBlock("text", {
     label: createLabelWithPreview("Текст", '<div data-gjs-type="text" style="color: #000000;">Вставьте ваш текст здесь</div>'),
     content: '<div data-gjs-type="text" style="color: #000000;">Вставьте ваш текст здесь</div>',
@@ -186,6 +187,23 @@ export function registerBlocks(editor: Editor) {
     media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>',
   });
 
+  addBlock("div", {
+    label: createLabelWithPreview("Контейнер div", '<div style="min-height: 50px; padding: 20px; background: #ffffff; border-radius: 8px;"></div>'),
+    content: '<div style="min-height: 50px; padding: 20px; background: #ffffff; border-radius: 8px;"></div>',
+    category: "Базовые",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
+  });
+
+  addBlock("section", {
+    label: createLabelWithPreview("Секция", '<div data-gjs-type="text">Содержимое секции</div>'),
+    content: {
+      type: "section",
+      components: '<div data-gjs-type="text">Содержимое секции</div>',
+    },
+    category: "Базовые",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>',
+  });
+
   addBlock("list", {
     label: createLabelWithPreview("Список", '<ul style="list-style: disc; padding-left: 20px; color: #000000;"><li data-gjs-type="text">Элемент списка 1</li><li data-gjs-type="text">Элемент списка 2</li><li data-gjs-type="text">Элемент списка 3</li></ul>'),
     content:
@@ -218,6 +236,57 @@ export function registerBlocks(editor: Editor) {
     media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>',
   });
 
+  addBlock("divider-text", {
+    label: createLabelWithPreview("Разделитель с текстом", '<div style="display:flex;align-items:center;gap:12px;"><div style="flex:1;height:1px;background:#000;"></div><span style="font-size:12px;color:#666;">или</span><div style="flex:1;height:1px;background:#000;"></div></div>'),
+    content: '<div style="display:flex;align-items:center;gap:16px;margin:32px 0;"><div style="flex:1;height:2px;background:#000000;"></div><span data-gjs-type="text" style="font-size:14px;color:#666666;font-weight:600;white-space:nowrap;">или</span><div style="flex:1;height:2px;background:#000000;"></div></div>',
+    category: "Базовые",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/></svg>',
+  });
+
+  addBlock("code-block", {
+    label: createLabelWithPreview("Блок кода", '<div style="background:#1e1e1e;color:#d4d4d4;padding:12px;border-radius:8px;font-family:monospace;font-size:11px;overflow-x:auto;">const code = "example";</div>'),
+    content: '<pre style="background:#1e1e1e;color:#d4d4d4;padding:20px;border-radius:12px;overflow-x:auto;border:1px solid #000000;font-family:\'Courier New\',monospace;font-size:14px;line-height:1.6;margin:0;"><code data-gjs-type="text">const example = "Hello, World!";\nconsole.log(example);</code></pre>',
+    category: "Базовые",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 18 22 12 16 6"/><polyline points="8 6 2 12 8 18"/></svg>',
+  });
+
+  // ========== СТРУКТУРА (колонки и контейнеры) ==========
+  addBlock("column1", {
+    label: createLabelWithPreview("1 Колонка", '<div class="row"><div class="cell" style="flex:1"></div></div>'),
+    content: '<div class="row"><div class="cell" style="flex:1"></div></div>',
+    category: "Структура",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
+  });
+
+  addBlock("column2", {
+    label: createLabelWithPreview("2 Колонки", '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>'),
+    content: '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>',
+    category: "Структура",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="9" height="18" rx="1"/><rect x="12" y="3" width="9" height="18" rx="1"/></svg>',
+  });
+
+  addBlock("column3", {
+    label: createLabelWithPreview("3 Колонки", '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>'),
+    content: '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>',
+    category: "Структура",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="16" y="3" width="5" height="18" rx="1"/></svg>',
+  });
+
+  addBlock("navbar", {
+    label: createLabelWithPreview("Навигация", '<div style="display:flex;justify-content:space-between;align-items:center;padding:12px;border-bottom:1px solid #000;"><div style="font-weight:700;font-size:14px;">Логотип</div><div style="display:flex;gap:12px;font-size:12px;"><span>Главная</span><span>О нас</span><span>Контакты</span></div></div>'),
+    content: '<nav style="display:flex;justify-content:space-between;align-items:center;padding:20px 32px;border-bottom:2px solid #000000;background:#ffffff;"><div><a href="#" data-gjs-type="text" style="font-size:24px;font-weight:800;color:#000000;text-decoration:none;">Логотип</a></div><div style="display:flex;gap:24px;align-items:center;"><a href="#" data-gjs-type="text" style="color:#000000;text-decoration:none;font-weight:600;font-size:16px;">Главная</a><a href="#" data-gjs-type="text" style="color:#000000;text-decoration:none;font-weight:600;font-size:16px;">О нас</a><a href="#" data-gjs-type="text" style="color:#000000;text-decoration:none;font-weight:600;font-size:16px;">Контакты</a><button data-gjs-type="text" style="padding:10px 20px;background:#000000;color:#ffffff;border:none;border-radius:8px;font-weight:600;cursor:pointer;">Войти</button></div></nav>',
+    category: "Структура",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>',
+  });
+
+  addBlock("footer", {
+    label: createLabelWithPreview("Футер", '<div style="background:#000;color:#fff;padding:20px;border-radius:8px;"><div style="font-weight:700;margin-bottom:12px;font-size:14px;">Компания</div><div style="font-size:11px;opacity:0.7;">© 2024 Все права защищены</div></div>'),
+    content: '<footer style="background:#000000;color:#ffffff;padding:48px 32px;border-top:2px solid #ffffff;"><div style="max-width:1200px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:32px;"><div><h4 data-gjs-type="text" style="margin:0 0 16px 0;font-size:20px;font-weight:700;">Компания</h4><p data-gjs-type="text" style="margin:0;font-size:14px;line-height:1.6;opacity:0.8;">Описание компании и её миссии.</p></div><div><h4 data-gjs-type="text" style="margin:0 0 16px 0;font-size:20px;font-weight:700;">Ссылки</h4><ul style="margin:0;padding:0;list-style:none;display:flex;flex-direction:column;gap:8px;"><li><a href="#" data-gjs-type="text" style="color:#ffffff;text-decoration:none;opacity:0.8;">Главная</a></li><li><a href="#" data-gjs-type="text" style="color:#ffffff;text-decoration:none;opacity:0.8;">О нас</a></li><li><a href="#" data-gjs-type="text" style="color:#ffffff;text-decoration:none;opacity:0.8;">Контакты</a></li></ul></div></div><div style="margin-top:32px;padding-top:32px;border-top:1px solid rgba(255,255,255,0.2);text-align:center;"><p data-gjs-type="text" style="margin:0;font-size:14px;opacity:0.7;">© 2024 Компания. Все права защищены.</p></div></footer>',
+    category: "Структура",
+    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l8-4v18M19 21V11l-6-4"/></svg>',
+  });
+
+  // ========== КОМПОНЕНТЫ ==========
   addBlock("card", {
     label: createLabelWithPreview("Карточка", '<div data-surface="elevated" style="background: #ffffff; border-radius: 16px; padding: 28px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); transition: all 0.3s ease; border: 1px solid #000000; color: #000000;"><h3 data-gjs-type="text" style="margin-top: 0; font-size: 24px; font-weight: 700; color: #000000;">Заголовок карточки</h3><p data-gjs-type="text" style="color: #000000; line-height: 1.6; margin: 0;">Содержимое карточки. Вы можете добавить текст, изображения и другие элементы.</p></div>'),
     content:
@@ -250,6 +319,7 @@ export function registerBlocks(editor: Editor) {
     media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 3H5a2 2 0 0 0-2 2v4m6-6h10a2 2 0 0 1 2 2v4M9 3v18m0 0h10a2 2 0 0 0 2-2V9M9 21H5a2 2 0 0 1-2-2V9m0 0h18"/></svg>',
   });
 
+  // ========== ФОРМЫ ==========
   addBlock("form", {
     label: createLabelWithPreview("Форма", '<form data-surface="base" style="padding: 32px; border-radius: 20px; background: #ffffff; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1); border: 1px solid #000000; display: flex; flex-direction: column; gap: 22px;"><div><label data-gjs-type="text" style="display: block; margin-bottom: 8px; font-weight: 600; color: #000000; font-size: 14px;">Имя</label><input type="text" placeholder="Введите имя" style="width: 100%; padding: 14px 18px; border: 1px solid #000000; border-radius: 12px; font-size: 15px; transition: all 0.3s ease; box-sizing: border-box; background: #ffffff; color: #000000;"></div><div><label data-gjs-type="text" style="display: block; margin-bottom: 8px; font-weight: 600; color: #000000; font-size: 14px;">Email</label><input type="email" placeholder="Введите email" style="width: 100%; padding: 14px 18px; border: 1px solid #000000; border-radius: 12px; font-size: 15px; transition: all 0.3s ease; box-sizing: border-box; background: #ffffff; color: #000000;"></div><button type="submit" data-gjs-type="text" style="padding: 14px 28px; background: #000000; color: #ffffff; border: none; border-radius: 12px; font-weight: 600; cursor: pointer;">Отправить</button></form>'),
     content:
@@ -298,44 +368,8 @@ export function registerBlocks(editor: Editor) {
     media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="3"/></svg>',
   });
 
-  addBlock("div", {
-    label: createLabelWithPreview("Контейнер div", '<div style="min-height: 50px; padding: 20px; background: #ffffff; border-radius: 8px;"></div>'),
-    content: '<div style="min-height: 50px; padding: 20px; background: #ffffff; border-radius: 8px;"></div>',
-    category: "Структура",
-    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
-  });
 
-  addBlock("section", {
-    label: createLabelWithPreview("Секция", '<div data-gjs-type="text">Содержимое секции</div>'),
-    content: {
-      type: "section",
-      components: '<div data-gjs-type="text">Содержимое секции</div>',
-    },
-    category: "Структура",
-    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/><line x1="3" y1="9" x2="21" y2="9"/></svg>',
-  });
-
-  addBlock("column1", {
-    label: createLabelWithPreview("1 Колонка", '<div class="row"><div class="cell" style="flex:1"></div></div>'),
-    content: '<div class="row"><div class="cell" style="flex:1"></div></div>',
-    category: "Структура",
-    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"/></svg>',
-  });
-
-  addBlock("column2", {
-    label: createLabelWithPreview("2 Колонки", '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>'),
-    content: '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>',
-    category: "Структура",
-    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="9" height="18" rx="1"/><rect x="12" y="3" width="9" height="18" rx="1"/></svg>',
-  });
-
-  addBlock("column3", {
-    label: createLabelWithPreview("3 Колонки", '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>'),
-    content: '<div class="row"><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div><div class="cell" style="flex:1"></div></div>',
-    category: "Структура",
-    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="5" height="18" rx="1"/><rect x="9.5" y="3" width="5" height="18" rx="1"/><rect x="16" y="3" width="5" height="18" rx="1"/></svg>',
-  });
-
+  // ========== МЕДИА ==========
   addBlock("image-gallery", {
     label: createLabelWithPreview("Галерея изображений", '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;"><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:8px;"></div><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:8px;"></div><div style="aspect-ratio:1;background:#f0f0f0;border:1px solid #ddd;border-radius:8px;"></div></div>'),
     content: {
@@ -456,13 +490,6 @@ export function registerBlocks(editor: Editor) {
     content: '<div style="position:relative;padding-left:32px;"><div style="position:absolute;left:0;top:0;bottom:0;width:2px;background:#000000;"></div><div style="position:relative;margin-bottom:32px;"><div style="position:absolute;left:-28px;top:4px;width:16px;height:16px;background:#000000;border-radius:50%;border:3px solid #ffffff;"></div><h4 data-gjs-type="text" style="margin:0 0 8px 0;font-size:20px;font-weight:700;color:#000000;">Событие 1</h4><p data-gjs-type="text" style="margin:0;font-size:16px;color:#666666;line-height:1.6;">Описание события. Вы можете редактировать этот текст.</p></div><div style="position:relative;margin-bottom:32px;"><div style="position:absolute;left:-28px;top:4px;width:16px;height:16px;background:#000000;border-radius:50%;border:3px solid #ffffff;"></div><h4 data-gjs-type="text" style="margin:0 0 8px 0;font-size:20px;font-weight:700;color:#000000;">Событие 2</h4><p data-gjs-type="text" style="margin:0;font-size:16px;color:#666666;line-height:1.6;">Описание события. Вы можете редактировать этот текст.</p></div></div>',
     category: "Компоненты",
     media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
-  });
-
-  addBlock("spinner", {
-    label: createLabelWithPreview("Загрузка", '<div style="width:32px;height:32px;border:3px solid #f0f0f0;border-top:3px solid #000;border-radius:50%;animation:spin 1s linear infinite;"></div>'),
-    content: '<div style="display:flex;align-items:center;justify-content:center;padding:40px;"><div style="width:48px;height:48px;border:4px solid #f0f0f0;border-top:4px solid #000000;border-radius:50%;animation:spin 1s linear infinite;"></div></div>',
-    category: "Компоненты",
-    media: '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>',
   });
 
   addBlock("divider-text", {
@@ -686,11 +713,10 @@ export function registerBlocks(editor: Editor) {
   customSections.forEach((section) => {
     addBlock(section.id, {
       label: createLabelMarkup(section.title, section.description, section.preview),
-      category: "Структура",
+      category: "Готовые разделы",
       media:
         '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="4" y="5" width="6" height="6" rx="1"/><rect x="14" y="5" width="6" height="6" rx="1"/><rect x="4" y="13" width="6" height="6" rx="1"/><rect x="14" y="13" width="6" height="6" rx="1"/></svg>',
       content: section.content,
     });
   });
 }
-

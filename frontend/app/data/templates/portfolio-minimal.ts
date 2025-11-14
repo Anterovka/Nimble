@@ -50,8 +50,8 @@ export const portfolioMinimalTemplate: Template = {
     <div style="max-width: 1200px; margin: 0 auto; padding: 1.75rem 2rem; display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem; font-size: 0.95rem; color: #475569;">
       <span>© 2025 Иван Иванов. Все права защищены.</span>
       <div style="display: flex; gap: 1rem;">
-        <a href="#" style="color: inherit; text-decoration: none;">LinkedIn</a>
-        <a href="#" style="color: inherit; text-decoration: none;">Dribbble</a>
+        <a href="#" style="color: inherit; text-decoration: none;">Telegram</a>
+        <a href="#" style="color: inherit; text-decoration: none;">Figma</a>
         <a href="#" style="color: inherit; text-decoration: none;">Behance</a>
       </div>
     </div>
@@ -59,9 +59,6 @@ export const portfolioMinimalTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; color: #000; background: #fff; }
-a:hover { text-decoration: underline; }
-header nav a:hover,
-footer a:hover { color: #2563eb; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2rem !important; }

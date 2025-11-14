@@ -8,4 +8,3 @@ export { InlineStylePanel } from "./InlineStylePanel";
 export { InlineThemeSelector } from "./InlineThemeSelector";
 export { SaveProjectModal } from "./SaveProjectModal";
 export { InteractionsPanel } from "./InteractionsPanel";
-

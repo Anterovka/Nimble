@@ -32,30 +32,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  // Загрузка пользователя при монтировании
   useEffect(() => {
     const loadUser = async () => {
       if (checkIsAuthenticated()) {
         try {
-          // Сначала пытаемся загрузить из localStorage
           const savedUser = getUser();
           if (savedUser) {
             setUser(savedUser);
           }
 
-          // Затем пытаемся получить актуальный профиль
           try {
             const profile = await getProfile();
             setUser(profile);
           } catch (error) {
-            // Если не удалось получить профиль, пытаемся обновить токен
             const tokens = await refreshToken();
             if (tokens) {
               try {
                 const profile = await getProfile();
                 setUser(profile);
               } catch {
-                // Если и это не помогло, очищаем аутентификацию
                 clearAuth();
                 setUser(null);
               }
@@ -75,7 +70,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     loadUser();
   }, []);
 
-  // Автоматическое обновление токена
   useEffect(() => {
     if (!checkIsAuthenticated()) return;
 
@@ -83,9 +77,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       try {
         await refreshToken();
       } catch {
-        // Игнорируем ошибки при автоматическом обновлении
       }
-    }, 60 * 60 * 1000); // Каждый час
+    }, 60 * 60 * 1000);
 
     return () => clearInterval(interval);
   }, []);
@@ -112,13 +105,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       if (response.user) {
         setUser(response.user);
       } else {
-        // Если пользователь не пришел в ответе, получаем профиль
         const profile = await getProfile();
         setUser(profile);
       }
     } catch (error) {
       const apiError = error as ApiError;
-      // API клиент уже обработал ошибки и сформировал сообщение
       throw new Error(apiError.message || 'Ошибка регистрации');
     }
   }, []);
@@ -134,7 +125,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const profile = await getProfile();
       setUser(profile);
     } catch (error) {
-      // Если не удалось получить профиль, пытаемся обновить токен
       const tokens = await refreshToken();
       if (tokens) {
         try {

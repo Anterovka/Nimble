@@ -55,4 +55,3 @@ export const rowStyle = `
     padding: 10px;
   }
 `;
-

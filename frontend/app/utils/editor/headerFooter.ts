@@ -121,7 +121,6 @@ export function applyHeaderFooter(
   const existingHeader = findComponent('.nimble-header', 'header');
   const existingFooter = findComponent('.nimble-footer', 'footer', true);
 
-  // Убеждаемся, что стили для header/footer загружены
   const currentStyles = editor.getStyle() || '';
   const headerFooterStyles = `
 .nimble-header {
@@ -370,7 +369,6 @@ export function applyHeaderFooter(
     }
   }, 100);
 
-  // Обновляем редактор, чтобы применить изменения
   editor.refresh();
 }
 
@@ -378,7 +376,6 @@ export function getInitialContent(header: HeaderSettings, footer: FooterSettings
   const headerHtml = generateHeaderHTML(header);
   const footerHtml = generateFooterHTML(footer);
   
-  // Возвращаем пустой контент - только обертку с header и footer
   return `
     <div class="page-shell">
       ${headerHtml}
@@ -388,4 +385,3 @@ export function getInitialContent(header: HeaderSettings, footer: FooterSettings
     </div>
   `;
 }
-

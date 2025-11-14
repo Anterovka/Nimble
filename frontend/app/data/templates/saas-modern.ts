@@ -34,7 +34,6 @@ export const saasModernTemplate: Template = {
           <span style="font-weight: 700; font-size: 1.1rem;">Google</span>
           <span style="font-weight: 700; font-size: 1.1rem;">Microsoft</span>
           <span style="font-weight: 700; font-size: 1.1rem;">Apple</span>
-          <span style="font-weight: 700; font-size: 1.1rem;">Amazon</span>
         </div>
       </div>
     </div>
@@ -69,8 +68,6 @@ export const saasModernTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif; }
-button:hover { }
-a:hover { opacity: 0.8; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; line-height: 1.2 !important; }

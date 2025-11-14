@@ -25,7 +25,6 @@ export function HTMLStructure({ editor }: HTMLStructureProps) {
   const inputRef = useRef<HTMLInputElement>(null);
 
   const getDefaultName = (comp: any): string => {
-    // Сначала проверяем сохраненное название
     const savedName = comp.getAttributes()?.["data-label"];
     if (savedName) return savedName;
 
@@ -33,12 +32,10 @@ export function HTMLStructure({ editor }: HTMLStructureProps) {
     const type = comp.get("type") || "default";
     const content = comp.get("content") || "";
     
-    // Получаем текст из содержимого (первые 30 символов)
     const textContent = typeof content === "string" 
       ? content.replace(/<[^>]*>/g, "").trim().substring(0, 30)
       : "";
 
-    // Генерируем понятное название на основе типа и содержимого
     if (type === "text" || tagName === "p") {
       return textContent || "Текст";
     }
@@ -71,13 +68,10 @@ export function HTMLStructure({ editor }: HTMLStructureProps) {
     if (type === "row") return "Строка";
     if (type === "cell") return "Ячейка";
     
-    // Если есть текст, используем его
     if (textContent) return textContent;
     
-    // Для div по умолчанию возвращаем "Контейнер"
     if (tagName === "div") return "Контейнер";
     
-    // Иначе используем тип или тег
     return type !== "default" ? type : tagName;
   };
 
@@ -103,7 +97,6 @@ export function HTMLStructure({ editor }: HTMLStructureProps) {
   const updateStructure = () => {
     if (!editor) return;
     
-    // Проверяем, что редактор полностью инициализирован
     if (!editor.Components || typeof editor.getComponents !== 'function') {
       return;
     }
@@ -116,11 +109,7 @@ export function HTMLStructure({ editor }: HTMLStructureProps) {
       const newStructure = buildStructure(Array.isArray(models) ? models : []);
       setStructure(newStructure);
       
-      // Элементы по умолчанию закрыты (не разворачиваем автоматически)
-      // При обновлении сохраняем текущее состояние
       setExpandedNodes((prev) => {
-        // При обновлении сохраняем текущее состояние
-        // Новые элементы остаются свернутыми по умолчанию
         return prev;
       });
     } catch (error) {
@@ -162,7 +151,6 @@ export function HTMLStructure({ editor }: HTMLStructureProps) {
     
     const newName = editingValue.trim();
     if (newName) {
-      // Сохраняем название в атрибуте компонента
       node.component.addAttributes({ "data-label": newName });
       updateStructure();
     }

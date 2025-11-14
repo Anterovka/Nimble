@@ -64,7 +64,10 @@ function EditorContent() {
   const updateTopbarHeight = useCallback(() => {
     if (topbarRef.current) {
       const rect = topbarRef.current.getBoundingClientRect();
-      setTopbarHeight(Math.round(rect.height));
+      const height = Math.round(rect.height);
+      if (height > 0) {
+        setTopbarHeight(height);
+      }
     }
   }, []);
 
@@ -119,10 +122,36 @@ function EditorContent() {
   }, [headerSettings, footerSettings]);
 
   useEffect(() => {
-    updateTopbarHeight();
-    window.addEventListener("resize", updateTopbarHeight);
+    const updateHeight = () => {
+      requestAnimationFrame(() => {
+        updateTopbarHeight();
+      });
+    };
+
+    updateHeight();
+    
+    const timeoutId = setTimeout(() => {
+      updateHeight();
+    }, 100);
+    
+    window.addEventListener("resize", updateHeight);
+    
+    if (topbarRef.current) {
+      const resizeObserver = new ResizeObserver(() => {
+        updateHeight();
+      });
+      resizeObserver.observe(topbarRef.current);
+      
+      return () => {
+        clearTimeout(timeoutId);
+        window.removeEventListener("resize", updateHeight);
+        resizeObserver.disconnect();
+      };
+    }
+    
     return () => {
-      window.removeEventListener("resize", updateTopbarHeight);
+      clearTimeout(timeoutId);
+      window.removeEventListener("resize", updateHeight);
     };
   }, [updateTopbarHeight]);
 
@@ -999,7 +1028,7 @@ function EditorContent() {
             const limit = subscription.project_limit === -1 ? 'неограниченно' : subscription.project_limit;
             const message = subscription.project_limit === -1 
               ? "Не удалось создать проект. Обратитесь в поддержку."
-              : `Достигнут лимит проектов для бесплатной подписки (${limit} проекта). Перейдите на премиум подписку для создания неограниченного количества проектов.`;
+              : `Достигнут лимит проектов для пробной подписки (${limit} проекта). Перейдите на премиум подписку для создания неограниченного количества проектов.`;
             setNotification({
               message,
               type: "error",
@@ -1064,8 +1093,6 @@ function EditorContent() {
       // Обновляем URL, чтобы при следующем сохранении проект был найден
       if (project.id && typeof project.id === 'number' && !isNaN(project.id) && project.id > 0) {
         router.replace(`/editor?project=${project.id}`, { scroll: false });
-      } else {
-        console.error("Получен невалидный ID проекта:", project.id);
       }
       
       const timestamp = new Date().toISOString();
@@ -1257,7 +1284,8 @@ function EditorContent() {
       )}
       <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-[#1a1a22] via-[#101016] to-[#09090d] text-slate-50 overflow-hidden">
       <header ref={topbarRef} className="bg-[rgba(10,10,14,0.82)] border-b border-white/6 shadow-[0_18px_46px_rgba(3,3,5,0.65)] backdrop-blur-[28px] backdrop-saturate-[185%] transition-all duration-300 relative z-[60]">
-        <div className="flex items-center justify-between px-3 min-[810px]:px-[clamp(18px,3.6vw,36px)] py-2 min-[810px]:py-[clamp(14px,2.6vw,22px)] gap-2 min-[810px]:gap-[clamp(18px,3vw,32px)] flex-wrap">
+        {/* Первая строка: логотип, кнопки управления (на ПК) и аватарка с выходом */}
+        <div className="flex items-center justify-between px-3 min-[610px]:px-[clamp(18px,3.6vw,36px)] py-2 min-[610px]:py-[clamp(14px,2.6vw,22px)] gap-2 min-[610px]:gap-[clamp(18px,3vw,32px)]">
           <div className="flex items-center gap-2 min-[810px]:gap-[clamp(16px,2vw,26px)] min-w-0">
             <Link href="/" className="inline-flex items-center justify-center w-[clamp(40px,4vw,52px)] h-[clamp(40px,4vw,52px)] rounded-[14px] bg-transparent border-none shadow-none transition-transform duration-[250ms] hover:-translate-y-0.5 flex-shrink-0" aria-label="На главную">
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -1289,7 +1317,9 @@ function EditorContent() {
               <span className="text-[clamp(11px,1.5vw,13px)] uppercase tracking-[0.12em] text-slate-200/55 hidden min-[810px]:block">Режим конструктора</span>
             </div>
           </div>
-          <div className="flex items-center gap-2 min-[810px]:gap-[clamp(12px,1.8vw,20px)] flex-wrap">
+          
+          {/* Кнопки управления - на ПК в первой строке, на мобильных во второй */}
+          <div className="hidden min-[610px]:flex items-center gap-2 min-[610px]:gap-[clamp(12px,1.8vw,20px)] flex-wrap">
             {/* Кнопка сохранения */}
             <button
               type="button"
@@ -1324,7 +1354,7 @@ function EditorContent() {
                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              <span className="hidden xl:inline">Предпросмотр</span>
+              <span className="hidden min-[1310px]:inline">Предпросмотр</span>
             </button>
 
             {/* Кнопка экспорта */}
@@ -1344,7 +1374,7 @@ function EditorContent() {
                 <path d="M7 11l5 5 5-5" />
                 <path d="M5 21h14" />
               </svg>
-              <span className="hidden xl:inline">Экспорт</span>
+              <span className="hidden min-[1310px]:inline">Экспорт</span>
             </button>
 
             {/* Кнопка деплоя */}
@@ -1364,7 +1394,7 @@ function EditorContent() {
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
                 <line x1="12" y1="22.08" x2="12" y2="12" />
               </svg>
-              <span className="hidden 2xl:inline">Развернуть на сервере</span>
+              <span className="hidden min-[1310px]:inline">Развернуть на сервере</span>
             </button>
 
             {/* Кнопка палитр */}
@@ -1378,7 +1408,7 @@ function EditorContent() {
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
               </svg>
-              <span className="hidden xl:inline">Палитры</span>
+              <span className="hidden min-[1310px]:inline">Палитры</span>
             </button>
 
             {/* Кнопка очистки */}
@@ -1398,40 +1428,153 @@ function EditorContent() {
                 <path d="M9 6l1-3h4l1 3" />
               </svg>
             </button>
-            {user && (
-              <div className="editor-user-group">
-                <Link
-                  href="/profile"
-                  className="user-avatar-circle"
-                  title={user.username || user.email || "Профиль"}
-                >
-                  {userInitial}
-                </Link>
-                <button
-                  type="button"
-                  className="editor-logout-button"
-                  aria-label="Выйти"
-                  onClick={logout}
-                >
-                  <svg
-                    width="20"
-                    height="20"
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  >
-                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
-                    <polyline points="16 17 21 12 16 7" />
-                    <line x1="21" y1="12" x2="9" y2="12" />
-                  </svg>
-                </button>
-              </div>
-            )}
           </div>
+          
+          {/* Аватарка и выход - справа в первой строке */}
+          {user && (
+            <div className="editor-user-group">
+              <Link
+                href="/profile"
+                className="user-avatar-circle"
+                title={user.username || user.email || "Профиль"}
+              >
+                {userInitial}
+              </Link>
+              <button
+                type="button"
+                className="editor-logout-button"
+                aria-label="Выйти"
+                onClick={logout}
+              >
+                <svg
+                  width="20"
+                  height="20"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+                  <polyline points="16 17 21 12 16 7" />
+                  <line x1="21" y1="12" x2="9" y2="12" />
+                </svg>
+              </button>
+            </div>
+          )}
         </div>
+        {/* Вторая строка: кнопки управления только на мобильных */}
+        <div className="flex items-center gap-2 px-3 pb-2 max-[610px]:justify-center min-[610px]:hidden flex-wrap">
+            {/* Кнопка сохранения */}
+            <button
+              type="button"
+              className={`inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border-transparent transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none ${
+                saveStatus === "saved" 
+                  ? "bg-gradient-to-br from-green-500 to-green-600 text-[#022c22] shadow-[0_8px_16px_rgba(34,197,94,0.1)] hover:shadow-[0_8px_16px_rgba(34,197,94,0.11)] hover:from-green-400 hover:to-green-500" 
+                  : saveStatus === "error"
+                  ? "bg-gradient-to-br from-orange-500 to-red-500 text-[#1b100f] shadow-[0_8px_16px_rgba(239,68,68,0.1)] hover:shadow-[0_8px_16px_rgba(239,68,68,0.11)] hover:from-orange-400 hover:to-red-400"
+                  : "bg-slate-50 text-[#0b0d16] shadow-[0_8px_16px_rgba(248,250,252,0.05)] hover:shadow-[0_8px_16px_rgba(248,250,252,0.053)] hover:bg-white"
+              }`}
+              onClick={handleSave}
+              disabled={!editorReady || saveStatus === "saving"}
+              aria-label={saveButtonLabel}
+              title={saveButtonLabel}
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M5 3h14l2 3v15a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1z" />
+                <path d="M15 3v6H9V3" />
+                <path d="M17 21v-8H7v8" />
+              </svg>
+            </button>
+
+            {/* Кнопка предпросмотра */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={handleOpenPreview}
+              disabled={!editorReady}
+              title="Предпросмотр"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
+                <circle cx="12" cy="12" r="3" />
+              </svg>
+              <span className="hidden min-[1310px]:inline">Предпросмотр</span>
+            </button>
+
+            {/* Кнопка экспорта */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={() => {
+                if (editorInstance) {
+                  setShowExportPreview(true);
+                }
+              }}
+              disabled={!editorReady}
+              title="Экспорт"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M12 3v12" />
+                <path d="M7 11l5 5 5-5" />
+                <path d="M5 21h14" />
+              </svg>
+              <span className="hidden min-[1310px]:inline">Экспорт</span>
+            </button>
+
+            {/* Кнопка деплоя */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={() => {
+                if (editorInstance) {
+                  setShowDeployModal(true);
+                }
+              }}
+              disabled={!editorReady}
+              title="Развернуть на сервере"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
+                <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
+                <line x1="12" y1="22.08" x2="12" y2="12" />
+              </svg>
+              <span className="hidden min-[1310px]:inline">Развернуть на сервере</span>
+            </button>
+
+            {/* Кнопка палитр */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={() => setShowThemeModal(true)}
+              disabled={!editorReady}
+              title="Палитры"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+              </svg>
+              <span className="hidden min-[1310px]:inline">Палитры</span>
+            </button>
+
+            {/* Кнопка очистки */}
+            <button
+              type="button"
+              className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border border-red-400/35 bg-red-500/15 text-red-200 shadow-[0_8px_16px_rgba(239,68,68,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-red-400/50 hover:bg-red-500/25 hover:text-red-100 hover:shadow-[0_8px_16px_rgba(239,68,68,0.066)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              onClick={handleClearCanvas}
+              disabled={!editorReady}
+              aria-label="Очистить"
+              title="Очистить"
+            >
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 6h18" />
+                <path d="M8 6v14a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2V6" />
+                <path d="M10 11v6" />
+                <path d="M14 11v6" />
+                <path d="M9 6l1-3h4l1 3" />
+              </svg>
+            </button>
+          </div>
         {saveMessage && (
           <div
             className={`editor-save-indicator ${
@@ -1540,6 +1683,18 @@ function EditorContent() {
           style={panelStyle}
         >
           <div className="webflow-panel-header">
+            <div className="webflow-panel-header-top">
+              <button
+                type="button"
+                className="webflow-panel-close"
+                onClick={() => setShowRightPanel(false)}
+                aria-label="Закрыть"
+              >
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M18 6L6 18M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
             <div className="webflow-panel-tabs">
               <button
                 type="button"
@@ -1563,16 +1718,6 @@ function EditorContent() {
                 Взаимодействия
               </button>
             </div>
-            <button
-              type="button"
-              className="webflow-panel-close"
-              onClick={() => setShowRightPanel(false)}
-              aria-label="Закрыть"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M18 6L6 18M6 6l12 12" />
-              </svg>
-            </button>
           </div>
           <div className="webflow-panel-content" ref={rightPanelContentRef}>
             {rightPanelTab === 'style' && (
@@ -1662,6 +1807,7 @@ function EditorContent() {
           isOpen={showThemeModal}
           onClose={() => setShowThemeModal(false)}
           editor={editorInstance}
+          projectId={currentProject?.id || null}
         />
       )}
 

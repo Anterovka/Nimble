@@ -127,8 +127,6 @@ export const restaurantElegantTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: 'Georgia', 'Times New Roman', serif; }
-button:hover { background: #d4af37 !important; color: #1a1a1a !important; }
-a:hover { color: #d4af37 !important; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; }

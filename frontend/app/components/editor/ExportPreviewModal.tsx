@@ -31,15 +31,12 @@ export function ExportPreviewModal({
   useEffect(() => {
     if (!isOpen || !editor) return;
 
-    // Получаем HTML и CSS из редактора
     const rawHtml = editor.getHtml?.() ?? "";
     const rawCss = editor.getCss?.() ?? "";
 
-    // Форматируем HTML и CSS
     const formattedHtml = formatHTML(rawHtml);
     const formattedCss = formatCSS(rawCss);
 
-    // Генерируем полный HTML с ссылкой на внешний CSS
     const fullHtmlContent = `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -60,7 +57,6 @@ ${formattedHtml.split('\n').map(line => '  ' + line).join('\n')}
 
   }, [isOpen, editor, headerSettings, footerSettings]);
 
-  // Обработка прокрутки для контейнеров с кодом
   useEffect(() => {
     const htmlContainer = htmlContainerRef.current;
     const cssContainer = cssContainerRef.current;
@@ -182,9 +178,9 @@ ${formattedHtml.split('\n').map(line => '  ' + line).join('\n')}
             </svg>
           </button>
         </header>
-        <div className="editor-theme-modal__body">
+        <div className="editor-theme-modal__body" style={{ display: 'flex', flexDirection: 'column', minHeight: 0 }}>
           {/* Вкладки */}
-          <div className="flex gap-1 sm:gap-2 mb-4 border-b border-white/10 z-index-10000">
+          <div className="flex gap-1 sm:gap-2 mb-4 border-b border-white/10 shrink-0">
             <button
               onClick={() => setActiveTab("html")}
               className={`px-2 sm:px-4 py-2 text-xs sm:text-sm font-semibold transition-colors whitespace-nowrap ${
@@ -207,12 +203,13 @@ ${formattedHtml.split('\n').map(line => '  ' + line).join('\n')}
             </button>
           </div>
 
-          {/* Контент вкладок */}
-          <div className="flex-1 flex flex-col min-h-0 mb-4">
+          {/* Контент вкладок - прокручиваемая область */}
+          <div className="flex-1 flex flex-col min-h-0 mb-4 overflow-hidden">
             {activeTab === "html" && (
               <div 
                 ref={htmlContainerRef}
-                className="flex-1 border border-white/10 rounded-lg bg-[#050505] overflow-auto no-scrollbar min-h-0"
+                className="flex-1 border border-white/10 rounded-lg bg-[#050505] overflow-auto no-scrollbar"
+                style={{ minHeight: 0 }}
               >
                 <pre className="text-xs sm:text-sm text-white/80 font-mono whitespace-pre p-2 sm:p-4 min-w-max">
                   {fullHtml}
@@ -223,7 +220,8 @@ ${formattedHtml.split('\n').map(line => '  ' + line).join('\n')}
             {activeTab === "css" && (
               <div 
                 ref={cssContainerRef}
-                className="flex-1 border border-white/10 rounded-lg bg-[#050505] overflow-auto no-scrollbar min-h-0"
+                className="flex-1 border border-white/10 rounded-lg bg-[#050505] overflow-auto no-scrollbar"
+                style={{ minHeight: 0 }}
               >
                 <pre className="text-xs sm:text-sm text-white/80 font-mono whitespace-pre p-2 sm:p-4" style={{ minWidth: 'max-content' }}>
                   {css}
@@ -232,8 +230,8 @@ ${formattedHtml.split('\n').map(line => '  ' + line).join('\n')}
             )}
           </div>
 
-          {/* Кнопки */}
-          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-white/10">
+          {/* Кнопки - всегда видны */}
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-white/10 shrink-0">
             <button
               onClick={handleDownloadArchive}
               className="flex-1 px-3 sm:px-4 py-2 bg-white text-black rounded-lg text-xs sm:text-sm font-semibold hover:bg-white/90 transition-colors"

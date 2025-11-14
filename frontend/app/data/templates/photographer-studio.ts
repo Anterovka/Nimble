@@ -107,7 +107,7 @@ export const photographerStudioTemplate: Template = {
       <p style="font-size: 1.2rem; margin-bottom: 1rem; color: #aaa;">Email: hello@mariaphoto.ru</p>
       <p style="font-size: 1.2rem; color: #aaa;">Телефон: +7 (495) 123-45-67</p>
       <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 3rem;">
-        <a href="#" style="color: #aaa; text-decoration: none; font-weight: 500;">Instagram</a>
+        <a href="#" style="color: #aaa; text-decoration: none; font-weight: 500;">ВКонтакте</a>
         <a href="#" style="color: #aaa; text-decoration: none; font-weight: 500;">VK</a>
         <a href="#" style="color: #aaa; text-decoration: none; font-weight: 500;">Telegram</a>
       </div>
@@ -116,9 +116,6 @@ export const photographerStudioTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-button:hover { box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important; }
-div[style*="cursor: pointer"]:hover { }
-a:hover { opacity: 0.7; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; }

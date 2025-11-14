@@ -43,19 +43,15 @@ export async function getBlocks(category?: string, isActive?: boolean): Promise<
   const url = query ? `/blocks/?${query}` : '/blocks/';
   const result = await apiClient.get<any>(url);
   
-  // Обрабатываем случай, когда API возвращает объект с пагинацией
   if (result && typeof result === 'object') {
-    // Если есть поле results (пагинация), используем его
     if (Array.isArray(result.results)) {
       return result.results;
     }
-    // Если это массив напрямую
     if (Array.isArray(result)) {
       return result;
     }
   }
   
-  // Если результат не массив, возвращаем пустой массив
   return [];
 }
 

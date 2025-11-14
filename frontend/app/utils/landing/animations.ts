@@ -1,7 +1,5 @@
-// Общие конфигурации анимаций для оптимизации кода
 import { Easing } from "framer-motion";
 
-// Анимация появления заголовка секции
 export const sectionTitleAnimation = {
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
@@ -9,15 +7,6 @@ export const sectionTitleAnimation = {
   transition: { duration: 0.5, ease: "easeOut" as Easing },
 };
 
-// Анимация появления элемента при скролле
-export const fadeInUpAnimation = {
-  initial: { opacity: 0, y: 20 },
-  whileInView: { opacity: 1, y: 0 },
-  viewport: { once: true },
-  transition: { duration: 0.5, ease: "easeOut" as Easing },
-};
-
-// Анимация карточки с задержкой по индексу
 export const getCardAnimation = (index: number, delayMultiplier: number = 0.1) => ({
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
@@ -33,7 +22,6 @@ export const getCardAnimation = (index: number, delayMultiplier: number = 0.1) =
   },
 });
 
-// Анимация карточки с меньшим подъемом при hover
 export const getCardAnimationSmall = (index: number, delayMultiplier: number = 0.05) => ({
   initial: { opacity: 0, y: 20 },
   whileInView: { opacity: 1, y: 0 },
@@ -49,13 +37,11 @@ export const getCardAnimationSmall = (index: number, delayMultiplier: number = 0
   },
 });
 
-// Анимация кнопки с масштабированием
 export const buttonHoverAnimation = {
   whileHover: { scale: 1.05 },
   whileTap: { scale: 0.95 },
 };
 
-// Анимация появления с задержкой (для hero секции)
 export const getFadeInAnimation = (delay: number = 0) => ({
   initial: { opacity: 0, y: 20 },
   animate: { opacity: 1, y: 0 },
@@ -66,7 +52,6 @@ export const getFadeInAnimation = (delay: number = 0) => ({
   },
 });
 
-// Анимация появления с меньшим смещением
 export const getFadeInAnimationSmall = (delay: number = 0) => ({
   initial: { opacity: 0, y: 15 },
   animate: { opacity: 1, y: 0 },
@@ -77,7 +62,6 @@ export const getFadeInAnimationSmall = (delay: number = 0) => ({
   },
 });
 
-// Анимация появления текста
 export const getTextFadeIn = (delay: number = 0) => ({
   initial: { opacity: 0 },
   whileInView: { opacity: 1 },
@@ -85,7 +69,6 @@ export const getTextFadeIn = (delay: number = 0) => ({
   transition: { duration: 0.5, delay },
 });
 
-// Анимация пульсации (для точек/индикаторов)
 export const pulseAnimation = {
   animate: {
     opacity: [0.5, 0.8, 0.5],

@@ -25,7 +25,6 @@ export function LoginForm({ onSuccess, onSwitchToRegister }: LoginFormProps) {
       await login({ username, password });
       onSuccess?.();
     } catch (err) {
-      // Обрабатываем ошибки от API
       if (err instanceof Error) {
         setError(err.message);
       } else if (typeof err === 'object' && err !== null && 'message' in err) {

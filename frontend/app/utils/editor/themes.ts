@@ -431,43 +431,204 @@ export function applyTheme(component: GrapesComponent | null, theme: ThemeStyle)
   });
 }
 
+export function resetProjectTheme(editor: GrapesEditor | null) {
+  if (!editor) return;
+
+  const root = editor.getWrapper() as GrapesComponent | undefined;
+  if (!root) return;
+
+  // Удаляем CSS правила для body и .page-shell
+  const Css = editor.Css;
+  try {
+    const allRules = Css.getAll();
+    const rulesToRemove = allRules.filter((rule: any) => {
+      const selectors = rule.getSelectors?.() || [];
+      return selectors.includes('body') || selectors.includes('.page-shell');
+    });
+    rulesToRemove.forEach((rule: any) => {
+      try {
+        Css.remove(rule);
+      } catch (e) {
+        // Игнорируем ошибки
+      }
+    });
+  } catch (e) {
+    // Игнорируем ошибки
+  }
+
+  // Сбрасываем стили всех компонентов, связанные с темой
+  const allComponents = root.find('*') as GrapesComponent[];
+  allComponents.forEach((component) => {
+    const style = component.getStyle?.() || {};
+    const themeRelatedProps = [
+      'background', 'background-color', 'color', 'border', 'border-color',
+      'border-top-color', 'border-right-color', 'border-bottom-color', 'border-left-color'
+    ];
+    
+    themeRelatedProps.forEach((prop) => {
+      if (style[prop]) {
+        component.removeStyle(prop);
+      }
+    });
+  });
+
+  // Сбрасываем стили root
+  root.removeStyle('background');
+  root.removeStyle('color');
+  
+  editor.trigger("canvas:style:update");
+}
+
 export function applyProjectTheme(editor: GrapesEditor | null, theme: ProjectTheme) {
   if (!editor) return;
+
+  // Сначала сбрасываем предыдущую тему
+  resetProjectTheme(editor);
 
   editor.getWrapper()?.setId("page-root");
   const root = editor.getWrapper() as GrapesComponent | undefined;
   if (!root) return;
 
+  // Применяем background к root и body
   root.addStyle({
     background: theme.background,
     color: theme.text,
   });
 
-  const textComponents = root.find('[data-gjs-type="text"]') as GrapesComponent[];
-  textComponents.forEach((component) => {
-    const style = (component.getStyle?.() ?? {}) as Record<string, string>;
-    const currentColor = (style.color || "").trim().toLowerCase();
-    const defaultTextColors = new Set([
-      "#1a1a1a", "#0f0f0f", "#0f172a", "#111827", "#1f2937",
-      "#333333", "#4a4a4a", "#666666", "#f6f7fa", "#f4f5f8",
-      "#000000", "#ffffff", "black", "white"
-    ]);
+  // Применяем background к body через CSS
+  const Css = editor.Css;
+  try {
+    const allRules = Css.getAll();
     
-    if (!currentColor || defaultTextColors.has(currentColor) || 
-        currentColor.includes("rgba(0,0,0") || currentColor.includes("rgb(0,0,0") ||
-        currentColor.includes("rgba(255,255,255") || currentColor.includes("rgb(255,255,255")) {
-      component.addStyle({ color: theme.text });
+    // Удаляем старые правила для body
+    const bodyRules = allRules.filter((rule: any) => {
+      const selectors = rule.getSelectors?.() || [];
+      return selectors.includes('body');
+    });
+    bodyRules.forEach((rule: any) => {
+      try {
+        Css.remove(rule);
+      } catch (e) {
+        // Игнорируем ошибки удаления
+      }
+    });
+    
+    // Добавляем новое правило для body
+    Css.add({
+      selectors: ['body'],
+      style: {
+        background: theme.background,
+        color: theme.text,
+      },
+    });
+  } catch (e) {
+    // Если не удалось через Css API, используем addStyle
+    editor.addStyle(`body { background: ${theme.background} !important; color: ${theme.text} !important; }`);
+  }
+
+  // Применяем background к .page-shell
+  const pageShell = root.find('.page-shell')?.[0] as GrapesComponent | undefined;
+  if (pageShell) {
+    const shellStyle = pageShell.getStyle?.() || {};
+    const shellBg = (shellStyle.background || '').toString().toLowerCase();
+    const defaultBackgrounds = ['radial-gradient', '#050505', '#0f172a', '#020510', '#111827', 'transparent', ''];
+    const hasDefaultBg = defaultBackgrounds.some(bg => shellBg.includes(bg));
+    
+    if (hasDefaultBg || !shellBg) {
+      pageShell.addStyle({
+        background: theme.background,
+        color: theme.text,
+      });
+    }
+  }
+
+  // Применяем background к .page-shell через CSS правило
+  try {
+    const pageShellRules = Css.getAll().filter((rule: any) => {
+      const selectors = rule.getSelectors?.() || [];
+      return selectors.includes('.page-shell');
+    });
+    pageShellRules.forEach((rule: any) => {
+      try {
+        Css.remove(rule);
+      } catch (e) {
+        // Игнорируем ошибки
+      }
+    });
+    
+    Css.add({
+      selectors: ['.page-shell'],
+      style: {
+        background: theme.background,
+        color: theme.text,
+      },
+    });
+  } catch (e) {
+    editor.addStyle(`.page-shell { background: ${theme.background} !important; color: ${theme.text} !important; }`);
+  }
+
+  // Применяем background к основным div контейнерам без явного background
+  const allDivs = root.find('div') as GrapesComponent[];
+  allDivs.forEach((div) => {
+    const divStyle = div.getStyle?.() || {};
+    const divBg = (divStyle.background || '').toString().toLowerCase();
+    const divClasses = div.getClasses?.() || [];
+    const isPageShell = Array.isArray(divClasses) ? divClasses.includes('page-shell') : false;
+    
+    if (!isPageShell) {
+      const hasDefaultBg = divBg.includes('radial-gradient') || divBg.includes('#050505') || 
+                          divBg.includes('#0f172a') || divBg.includes('#020510') || 
+                          !divBg || divBg === 'transparent';
+      
+      if (hasDefaultBg && !div.getAttributes?.()?.['data-surface']) {
+        const parent = div.parent();
+        const parentBg = parent?.getStyle?.()?.background || '';
+        if (!parentBg || parentBg.toString().toLowerCase().includes('radial-gradient') || 
+            parentBg.toString().toLowerCase().includes('#050505')) {
+          div.addStyle({
+            background: theme.background,
+          });
+        }
+      }
     }
   });
 
+  // Применяем цвет текста ко всем текстовым элементам
+  const textComponents = root.find('[data-gjs-type="text"], p, span, h1, h2, h3, h4, h5, h6, div, li, td, th, label') as GrapesComponent[];
+  textComponents.forEach((component) => {
+    const style = (component.getStyle?.() ?? {}) as Record<string, string>;
+    const currentColor = (style.color || "").trim().toLowerCase();
+    const tagName = component.get('tagName')?.toLowerCase() || '';
+    const componentType = component.get('type') || '';
+    
+    // Пропускаем элементы с явно заданным цветом (не дефолтным)
+    const defaultTextColors = new Set([
+      "#1a1a1a", "#0f0f0f", "#0f172a", "#111827", "#1f2937",
+      "#333333", "#4a4a4a", "#666666", "#f6f7fa", "#f4f5f8",
+      "#000000", "#ffffff", "black", "white", "#f8fafc", "#e5e7eb"
+    ]);
+    
+    // Применяем цвет текста, если это дефолтный цвет или цвет не задан
+    if (!currentColor || defaultTextColors.has(currentColor) || 
+        currentColor.includes("rgba(0,0,0") || currentColor.includes("rgb(0,0,0") ||
+        currentColor.includes("rgba(255,255,255") || currentColor.includes("rgb(255,255,255")) {
+      // Проверяем, не является ли элемент кнопкой или ссылкой
+      if (tagName !== 'button' && tagName !== 'a' && tagName !== 'input' && tagName !== 'textarea' && tagName !== 'select') {
+        component.addStyle({ color: theme.text });
+      }
+    }
+  });
+
+  // Применяем стили ко всем кнопкам
   const buttons = root.find("button") as GrapesComponent[];
   buttons.forEach((btn) => {
     const style = btn.getStyle?.() || {};
-    const bgValue = style.background || "";
-    const background = typeof bgValue === 'string' ? bgValue.toLowerCase() : '';
-    const hasGradient = background.includes("gradient");
+    const bgValue = (style.background || "").toString().toLowerCase();
+    const hasGradient = bgValue.includes("gradient");
+    const defaultButtonBgs = ['transparent', '', '#0f172a', '#1a1a1a', '#111827'];
+    const hasDefaultBg = !bgValue || bgValue === 'transparent' || defaultButtonBgs.some(bg => bgValue.includes(bg));
     
-    if (hasGradient || !background || background === "transparent") {
+    if (hasGradient || hasDefaultBg) {
       btn.addStyle({
         background: theme.buttonPrimary,
         color: theme.buttonPrimaryText,
@@ -482,23 +643,37 @@ export function applyProjectTheme(editor: GrapesEditor | null, theme: ProjectThe
     }
   });
 
+  // Применяем стили ко всем ссылкам
   const links = root.find("a") as GrapesComponent[];
   links.forEach((link) => {
     const style = link.getStyle?.() || {};
     const hasBackground = Boolean(style.background || style["background-color"]);
+    const currentColor = (style.color || "").toString().toLowerCase();
+    const defaultLinkColors = ['#6366f1', '#3b82f6', '#60a5fa', '#818cf8', 'inherit', ''];
+    const hasDefaultColor = !currentColor || defaultLinkColors.some(c => currentColor.includes(c));
     
     if (!hasBackground) {
-      link.addStyle({ color: theme.primary });
+      if (hasDefaultColor) {
+        link.addStyle({ color: theme.primary });
+      }
     }
   });
 
+  // Применяем стили ко всем полям ввода
   const inputs = root.find("input, textarea, select") as GrapesComponent[];
   inputs.forEach((input) => {
-    input.addStyle({
-      background: theme.surface,
-      color: theme.surfaceText,
-      border: `1px solid ${theme.border}`,
-    });
+    const style = input.getStyle?.() || {};
+    const bgValue = (style.background || "").toString().toLowerCase();
+    const defaultInputBgs = ['transparent', '', '#ffffff', '#f9fafb', '#1a1a1a', '#0f172a'];
+    const hasDefaultBg = !bgValue || defaultInputBgs.some(bg => bgValue.includes(bg));
+    
+    if (hasDefaultBg) {
+      input.addStyle({
+        background: theme.surface,
+        color: theme.surfaceText,
+        border: `1px solid ${theme.border}`,
+      });
+    }
   });
 
   const surfaceBase = root.find('[data-surface="base"]') as GrapesComponent[];
@@ -517,9 +692,23 @@ export function applyProjectTheme(editor: GrapesEditor | null, theme: ProjectThe
     });
   });
 
+  // Применяем тему рекурсивно ко всем вложенным элементам
+  const applyThemeRecursively = (component: GrapesComponent) => {
+    const children = component.components();
+    if (children && children.length > 0) {
+      children.forEach((child: GrapesComponent) => {
+        applyProjectThemeToComponent(child, theme);
+        applyThemeRecursively(child);
+      });
+    }
+  };
+  
+  applyThemeRecursively(root);
+
   (editor as any).__currentTheme = theme;
 
   editor.trigger("canvas:style:update");
+  editor.trigger("component:update");
 }
 
 export function applyProjectThemeToComponent(component: GrapesComponent, theme: ProjectTheme) {

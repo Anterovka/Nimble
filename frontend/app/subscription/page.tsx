@@ -53,8 +53,6 @@ export default function SubscriptionPage() {
     try {
       setUpdating(true);
       setError(null);
-      // В реальном приложении здесь будет интеграция с платежной системой
-      // Пока просто обновляем подписку (для тестирования)
       const updated = await updateSubscription('premium');
       setSubscription(updated);
       setNotification({
@@ -119,7 +117,7 @@ export default function SubscriptionPage() {
               <div className="flex justify-between">
                 <span className="text-white/60">Тип подписки:</span>
                 <span className="font-semibold">
-                  {subscription.subscription_type === 'premium' ? 'Премиум' : 'Бесплатная'}
+                  {subscription.subscription_type === 'premium' ? 'Премиум' : 'Пробная'}
                 </span>
               </div>
               <div className="flex justify-between">
@@ -144,10 +142,10 @@ export default function SubscriptionPage() {
 
         {/* Планы */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
-          {/* Бесплатный план */}
-          <div className={`bg-white/5 border rounded-xl p-8 ${isPremium ? 'border-white/10' : 'border-white/20'}`}>
+          {/* Пробный план */}
+          <div className={`bg-white/5 border rounded-xl p-8 flex flex-col ${isPremium ? 'border-white/10' : 'border-white/20'}`}>
             <div className="mb-6">
-              <h3 className="text-2xl font-bold mb-2">Бесплатный</h3>
+              <h3 className="text-2xl font-bold mb-2">Пробный</h3>
               <div className="text-4xl font-bold mb-1">0₽</div>
               <div className="text-white/60 text-sm">навсегда</div>
             </div>
@@ -174,7 +172,7 @@ export default function SubscriptionPage() {
             {!isPremium && (
               <button
                 disabled
-                className="w-full px-6 py-3 border border-white/20 text-white rounded-lg font-semibold cursor-not-allowed opacity-50"
+                className="w-full px-6 py-3 border border-white/20 text-white rounded-lg font-semibold cursor-not-allowed opacity-50 mt-auto"
               >
                 Текущий план
               </button>
@@ -182,7 +180,7 @@ export default function SubscriptionPage() {
           </div>
 
           {/* Премиум план */}
-          <div className={`bg-white/5 border rounded-xl p-8 relative ${isPremium ? 'border-white/20' : 'border-white/10'}`}>
+          <div className={`bg-white/5 border rounded-xl p-8 relative flex flex-col ${isPremium ? 'border-white/20' : 'border-white/10'}`}>
             {isPremium && (
               <div className="absolute top-4 right-4 px-3 py-1 bg-green-500/20 text-green-400 text-xs font-semibold rounded-full border border-green-500/30">
                 Активна
@@ -222,7 +220,7 @@ export default function SubscriptionPage() {
             {isPremium ? (
               <button
                 disabled
-                className="w-full px-6 py-3 bg-white/10 text-white rounded-lg font-semibold cursor-not-allowed"
+                className="w-full px-6 py-3 bg-white/10 text-white rounded-lg font-semibold cursor-not-allowed mt-auto"
               >
                 Текущий план
               </button>
@@ -239,7 +237,7 @@ export default function SubscriptionPage() {
         </div>
 
         <div className="mt-12 text-center text-white/60">
-          <p>Вопросы? <Link href="https://t.me/pavelsurron" className="text-white hover:underline">Свяжитесь с нами</Link></p>
+          <p>Вопросы? <Link href="ССЫЛКУ СЮДА" className="text-white hover:underline">Свяжитесь с нами</Link></p>
         </div>
       </div>
     </div>

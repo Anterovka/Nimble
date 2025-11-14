@@ -20,7 +20,6 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   const [isLoading, setIsLoading] = useState(false);
   const { register } = useAuth();
 
-  // Валидация пароля
   const passwordValidation = useMemo(() => {
     const hasMinLength = password.length >= 8;
     const hasLetters = /[a-zA-Zа-яА-Я]/.test(password);
@@ -40,7 +39,6 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
     e.preventDefault();
     setError('');
 
-    // Валидация имени пользователя - только английские буквы, цифры, дефисы и подчеркивания
     if (!/^[a-zA-Z0-9_-]+$/.test(username)) {
       setError('Имя пользователя может содержать только английские буквы, цифры, дефисы и подчеркивания');
       return;
@@ -83,9 +81,9 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-5 relative z-10">
+    <form onSubmit={handleSubmit} className="space-y-4 sm:space-y-5 relative z-10">
       <div>
-        <label htmlFor="register-username" className="block text-sm font-medium text-white/90 mb-2.5">
+        <label htmlFor="register-username" className="block text-xs sm:text-sm font-medium text-white/90 mb-2">
           Имя пользователя *
         </label>
         <input
@@ -94,14 +92,14 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           value={username}
           onChange={(e) => setUsername(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
           placeholder="Введите имя пользователя"
         />
-        <p className="mt-1.5 text-xs text-white/40">Только английские буквы, цифры, дефисы и подчеркивания</p>
+        <p className="mt-1 text-xs text-white/40">Только английские буквы, цифры, дефисы и подчеркивания</p>
       </div>
 
       <div>
-        <label htmlFor="register-email" className="block text-sm font-medium text-white/90 mb-2.5">
+        <label htmlFor="register-email" className="block text-xs sm:text-sm font-medium text-white/90 mb-2">
           Email *
         </label>
         <input
@@ -110,14 +108,14 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           value={email}
           onChange={(e) => setEmail(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
           placeholder="Введите email"
         />
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
         <div>
-          <label htmlFor="register-first-name" className="block text-sm font-medium text-white/90 mb-2.5">
+          <label htmlFor="register-first-name" className="block text-xs sm:text-sm font-medium text-white/90 mb-2">
             Имя
           </label>
           <input
@@ -125,13 +123,13 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
             type="text"
             value={firstName}
             onChange={(e) => setFirstName(e.target.value)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
             placeholder="Имя"
           />
         </div>
 
         <div>
-          <label htmlFor="register-last-name" className="block text-sm font-medium text-white/90 mb-2.5">
+          <label htmlFor="register-last-name" className="block text-xs sm:text-sm font-medium text-white/90 mb-2">
             Фамилия
           </label>
           <input
@@ -139,14 +137,14 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
             type="text"
             value={lastName}
             onChange={(e) => setLastName(e.target.value)}
-            className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
+            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
             placeholder="Фамилия"
           />
         </div>
       </div>
 
       <div>
-        <label htmlFor="register-password" className="block text-sm font-medium text-white/90 mb-2.5">
+        <label htmlFor="register-password" className="block text-xs sm:text-sm font-medium text-white/90 mb-2">
           Пароль *
         </label>
         <input
@@ -155,7 +153,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           required
-          className={`w-full px-4 py-3 bg-white/5 border rounded-xl text-white placeholder-white/40 focus:outline-none focus:bg-white/10 focus:ring-2 transition-all ${
+          className={`w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:bg-white/10 focus:ring-2 transition-all ${
             password && !passwordValidation.isValid
               ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20'
               : password && passwordValidation.isValid
@@ -223,7 +221,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       </div>
 
       <div>
-        <label htmlFor="register-password-confirm" className="block text-sm font-medium text-white/90 mb-2.5">
+        <label htmlFor="register-password-confirm" className="block text-xs sm:text-sm font-medium text-white/90 mb-2">
           Подтвердите пароль *
         </label>
         <input
@@ -232,7 +230,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
           value={passwordConfirm}
           onChange={(e) => setPasswordConfirm(e.target.value)}
           required
-          className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
+          className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-white/5 border border-white/10 rounded-lg sm:rounded-xl text-sm sm:text-base text-white placeholder-white/40 focus:outline-none focus:border-white/30 focus:bg-white/10 focus:ring-2 focus:ring-white/20 transition-all"
           placeholder="Подтвердите пароль"
         />
       </div>
@@ -241,7 +239,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
         <motion.div
           initial={{ opacity: 0, y: -10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="p-3.5 bg-red-500/10 border border-red-500/30 rounded-xl text-red-400 text-sm whitespace-pre-line backdrop-blur-sm"
+          className="p-3 sm:p-3.5 bg-red-500/10 border border-red-500/30 rounded-lg sm:rounded-xl text-red-400 text-xs sm:text-sm whitespace-pre-line backdrop-blur-sm"
         >
           {error}
         </motion.div>
@@ -250,7 +248,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       <button
         type="submit"
         disabled={isLoading}
-        className="w-full px-4 py-3.5 mt-5 bg-gradient-to-r from-white to-white/95 text-black rounded-xl font-semibold hover:from-white/95 hover:to-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/10 hover:shadow-white/20"
+        className="w-full px-4 py-3 sm:py-3.5 mt-4 sm:mt-5 bg-gradient-to-r from-white to-white/95 text-black rounded-lg sm:rounded-xl text-sm sm:text-base font-semibold hover:from-white/95 hover:to-white/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed shadow-lg shadow-white/10 hover:shadow-white/20"
       >
         {isLoading ? (
           <span className="flex items-center justify-center gap-2">
@@ -266,7 +264,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       </button>
 
       {onSwitchToLogin && (
-        <p className="text-center text-sm text-white/50 pt-2">
+        <p className="text-center text-xs sm:text-sm text-white/50 pt-2">
           Уже есть аккаунт?{' '}
           <button
             type="button"

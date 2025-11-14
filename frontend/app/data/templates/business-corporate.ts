@@ -74,8 +74,6 @@ export const businessCorporateTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
-header nav a:hover,
-footer a:hover { text-decoration: underline; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h1 { font-size: 2rem !important; }

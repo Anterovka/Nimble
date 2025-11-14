@@ -17,7 +17,6 @@ const navItems = [
 ];
 
 export function AnimatedHeader() {
-  // Состояние: прокручена ли страница
   const [scrolled, setScrolled] = useState(false);
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
@@ -25,7 +24,6 @@ export function AnimatedHeader() {
   const lenis = useLenis();
   const { user, isAuthenticated, logout } = useAuth();
 
-  // Отслеживаем прокрутку страницы
   useEffect(() => {
     const handleScroll = (latest: number) => {
       setScrolled(latest > 50);
@@ -35,7 +33,6 @@ export function AnimatedHeader() {
     return () => unsubscribe();
   }, [scrollY]);
 
-  // Значения для анимации навигации при прокрутке
   const navScale = scrolled ? [1, 1.05, 1] : 1;
   const navScaleTransition = scrolled
     ? { duration: 0.5, times: [0, 0.5, 1], ease: "easeOut" as const }
@@ -43,7 +40,6 @@ export function AnimatedHeader() {
 
   const headerHeight = scrolled ? 60 : 80;
 
-  // Значения для навигации
   const navBackgroundColor = scrolled ? "rgba(5, 5, 5, 0.75)" : "rgba(5, 5, 5, 0)";
   const navBackdropFilter = scrolled ? "blur(20px) saturate(180%)" : "blur(0px)";
   const navBorder = scrolled ? "1px solid rgba(255, 255, 255, 0.18)" : "1px solid transparent";
@@ -57,7 +53,6 @@ export function AnimatedHeader() {
     ? "linear-gradient(135deg, rgba(255, 255, 255, 0.06) 0%, rgba(255, 255, 255, 0.03) 50%, rgba(255, 255, 255, 0.01) 100%)"
     : "transparent";
 
-  // Значения для декоративного слоя
   const overlayOpacity = scrolled ? 1 : 0;
   const overlayBackground = scrolled
     ? "linear-gradient(180deg, rgba(255, 255, 255, 0.07) 0%, rgba(255, 255, 255, 0.02) 50%, transparent 100%)"
@@ -79,14 +74,14 @@ export function AnimatedHeader() {
       }}
     >
       <motion.nav
-        className="h-full max-w-7xl mx-auto px-4 md:px-8 relative overflow-hidden"
+        className="h-full max-w-7xl mx-auto px-3 sm:px-4 md:px-8 relative overflow-hidden"
         animate={{
           backgroundColor: navBackgroundColor,
           backdropFilter: navBackdropFilter,
           border: navBorder,
           borderRadius: navBorderRadius,
-          marginTop: navMarginTop,
-          width: navWidth,
+          marginTop: scrolled ? 12 : 0,
+          width: scrolled ? "calc(100% - 1.5rem)" : "100%",
           boxShadow: navBoxShadow,
         }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
@@ -95,7 +90,6 @@ export function AnimatedHeader() {
           WebkitBackdropFilter: navBackdropFilter,
         } as React.CSSProperties}
       >
-        {/* Декоративный слой */}
         <motion.div
           className="absolute inset-0 rounded-[inherit] pointer-events-none overflow-hidden"
           animate={{ opacity: overlayOpacity }}
@@ -150,7 +144,7 @@ export function AnimatedHeader() {
                 </motion.svg>
               </div>
               <motion.span
-                className="text-white font-semibold whitespace-nowrap text-xl md:text-2xl shrink-0"
+                className="text-white font-semibold whitespace-nowrap text-lg sm:text-xl md:text-2xl shrink-0"
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ duration: 0.6, delay: 0.3 }}
@@ -160,9 +154,8 @@ export function AnimatedHeader() {
             </Link>
           </motion.div>
 
-          {/* Навигационное меню */}
           <motion.div
-            className="hidden md:flex items-center gap-8 shrink-0"
+            className="hidden lg:flex items-center gap-6 xl:gap-8 shrink-0"
             initial={{ opacity: 0, y: -10 }}
             animate={{
               opacity: 1,
@@ -182,7 +175,7 @@ export function AnimatedHeader() {
                 <motion.button
                   key={item.id}
                   onClick={() => smoothScrollTo(item.id, lenis)}
-                  className="text-white/80 hover:text-white text-sm transition-colors whitespace-nowrap relative group"
+                  className="text-white/80 hover:text-white text-xs lg:text-sm transition-colors whitespace-nowrap relative group"
                   initial={{ opacity: 0, y: -10 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
@@ -199,8 +192,7 @@ export function AnimatedHeader() {
             })}
           </motion.div>
 
-          {/* Кнопки авторизации/пользователя */}
-          <motion.div className="flex items-center gap-3 shrink-0"
+          <motion.div className="flex items-center gap-2 sm:gap-3 shrink-0"
             initial={{ x: 30, opacity: 0 }}
             animate={{ x: 0, opacity: 1 }}
             transition={{ duration: 0.6, delay: 0.6, ease: [0.16, 1, 0.3, 1] }}
@@ -211,7 +203,7 @@ export function AnimatedHeader() {
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
                   transition={{ duration: 0.6, delay: 0.7 }}
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-2 sm:gap-3"
                 >
                   <Link
                     href="/profile"
@@ -251,7 +243,7 @@ export function AnimatedHeader() {
                       setAuthModalMode('login');
                       setAuthModalOpen(true);
                     }}
-                    className="px-4 py-2 border border-white/20 text-white rounded-lg text-sm font-medium whitespace-nowrap hover:border-white/40 hover:bg-white/5 transition-all"
+                    className="px-2.5 py-1.5 sm:px-4 sm:py-2 border border-white/20 text-white rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap hover:border-white/40 hover:bg-white/5 transition-all"
                   >
                     Войти
                   </button>
@@ -262,15 +254,15 @@ export function AnimatedHeader() {
                       setAuthModalMode('register');
                       setAuthModalOpen(true);
                     }}
-                    className="px-4 py-2 bg-white text-black rounded-lg text-sm font-medium whitespace-nowrap hover:bg-white/90 transition-all"
+                    className="px-2.5 py-1.5 sm:px-4 sm:py-2 bg-white text-black rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap hover:bg-white/90 transition-all"
                   >
                     Регистрация
                   </button>
                 </motion.div>
-                <motion.div {...buttonHoverAnimation}>
+                <motion.div {...buttonHoverAnimation} className="hidden sm:block">
                   <Link
                     href="/editor"
-                    className="relative px-4 py-2 bg-white text-black rounded-lg text-sm font-medium whitespace-nowrap overflow-hidden group block"
+                    className="relative px-2.5 py-1.5 sm:px-4 sm:py-2 bg-white text-black rounded-lg text-xs sm:text-sm font-medium whitespace-nowrap overflow-hidden group block"
                   >
                     <motion.span className="relative z-10" initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ duration: 0.6, delay: 0.7 }}>
                       Начать
@@ -283,7 +275,6 @@ export function AnimatedHeader() {
         </div>
       </motion.nav>
 
-      {/* Модальное окно авторизации */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => setAuthModalOpen(false)}

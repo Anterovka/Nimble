@@ -135,4 +135,3 @@ export const repositories = [
     url: "https://github.com/Anterovka/Nimble",
   },
 ];
-

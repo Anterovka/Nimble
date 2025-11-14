@@ -27,6 +27,10 @@ interface StyleValues {
   paddingLeft: string;
   backgroundColor: string;
   backgroundImage: string;
+  gradientType: string;
+  gradientColor1: string;
+  gradientColor2: string;
+  gradientDirection: string;
   borderWidth: string;
   borderStyle: string;
   borderColor: string;
@@ -50,6 +54,7 @@ const defaultStyles: StyleValues = {
   marginTop: "", marginRight: "", marginBottom: "", marginLeft: "",
   paddingTop: "", paddingRight: "", paddingBottom: "", paddingLeft: "",
   backgroundColor: "", backgroundImage: "",
+  gradientType: "", gradientColor1: "#6366f1", gradientColor2: "#8b5cf6", gradientDirection: "to right",
   borderWidth: "", borderStyle: "solid", borderColor: "", borderRadius: "",
   boxShadow: "", boxShadowX: "0", boxShadowY: "0", boxShadowBlur: "0", boxShadowSpread: "0", boxShadowColor: "#000000",
   textShadow: "", opacity: "1",
@@ -120,11 +125,9 @@ const InputWithUnit = ({
   const numericValue = numericPart ? parseFloat(numericPart) : (showSlider ? sliderMin : 0);
   const isValidNumber = !isNaN(numericValue) && isFinite(numericValue);
 
-  // Состояние для хранения числового значения во время ввода
   const [inputValue, setInputValue] = useState(numericPart);
   const [isEditing, setIsEditing] = useState(false);
 
-  // Обновляем inputValue при изменении value извне (только если не редактируем)
   useEffect(() => {
     if (!isEditing) {
       const newNumericPart = value.replace(/[^0-9.\-]/g, "");
@@ -134,20 +137,14 @@ const InputWithUnit = ({
 
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    
-    // Разрешаем ввод только чисел, точки и минуса
     const cleanedValue = rawValue.replace(/[^0-9.\-]/g, "");
     setInputValue(cleanedValue);
     setIsEditing(true);
     
-    // Если поле пустое, очищаем значение
     if (!cleanedValue.trim()) {
       onChange(property, "");
       return;
     }
-
-    // Применяем значение с единицами сразу, чтобы изменения отображались на сайте
-    // Но в поле показываем только число
     const valueWithUnit = `${cleanedValue}${currentUnit}`;
     onChange(property, valueWithUnit);
   };
@@ -158,7 +155,6 @@ const InputWithUnit = ({
 
   const handleInputBlur = () => {
     setIsEditing(false);
-    // При потере фокуса добавляем единицы измерения, если есть число
     if (inputValue.trim() && !isNaN(parseFloat(inputValue))) {
       onChange(property, `${inputValue}${currentUnit}`);
     } else if (!inputValue.trim()) {
@@ -205,12 +201,10 @@ const InputWithUnit = ({
           value={currentUnit}
           onChange={(e) => {
             const nextUnit = e.target.value;
-            // Используем inputValue, если оно есть, иначе numericPart из текущего value
             const numValue = inputValue.trim() || numericPart;
             if (numValue && !isNaN(parseFloat(numValue))) {
               const newValue = `${numValue}${nextUnit}`;
               onChange(property, newValue);
-              // Обновляем inputValue, чтобы оно соответствовало новому значению
               setInputValue(numValue);
             } else {
               onChange(property, "");
@@ -260,33 +254,6 @@ const ColorInput = ({
   </div>
 );
 
-const SpacingGrid = ({
-  label,
-  properties,
-  styles,
-  onChange,
-}: {
-  label: string;
-  properties: StyleKey[];
-  styles: StyleValues;
-  onChange: (property: StyleKey, value: string) => void;
-}) => (
-  <div className="styles-field">
-    <label>{label}</label>
-    <div className="styles-spacing-grid">
-      {properties.map((property) => (
-        <input
-          key={property}
-          type="text"
-          value={styles[property]}
-          onChange={(e) => onChange(property, e.target.value)}
-          placeholder="0"
-          className="styles-spacing-input"
-        />
-      ))}
-    </div>
-  </div>
-);
 
 export function StylePanel({ editor }: StylePanelProps) {
   const [selectedComponent, setSelectedComponent] = useState<Component | null>(null);
@@ -311,11 +278,9 @@ export function StylePanel({ editor }: StylePanelProps) {
 
     const compStyles = (component.getStyle?.() ?? {}) as Record<string, unknown>;
 
-    // Парсинг box-shadow
     const boxShadowValue = getStyleValue(compStyles, "box-shadow");
     let boxShadowX = "0px", boxShadowY = "0px", boxShadowBlur = "0px", boxShadowSpread = "0px", boxShadowColor = "#000000";
     if (boxShadowValue && boxShadowValue !== "none") {
-      // Парсим box-shadow: offsetX offsetY blur spread color
       const shadowMatch = boxShadowValue.match(/(-?\d+(?:\.\d+)?)(px|em|rem)?\s+(-?\d+(?:\.\d+)?)(px|em|rem)?\s+(-?\d+(?:\.\d+)?)(px|em|rem)?\s+(-?\d+(?:\.\d+)?)(px|em|rem)?\s*(.+)?/);
       if (shadowMatch) {
         const unit = shadowMatch[2] || shadowMatch[4] || shadowMatch[6] || shadowMatch[8] || "px";
@@ -327,7 +292,6 @@ export function StylePanel({ editor }: StylePanelProps) {
       }
     }
 
-    // Парсинг text-shadow
     const textShadowValue = getStyleValue(compStyles, "text-shadow");
 
     setStyles({
@@ -350,6 +314,76 @@ export function StylePanel({ editor }: StylePanelProps) {
       paddingLeft: getStyleValue(compStyles, "padding-left"),
       backgroundColor: getStyleValue(compStyles, "background-color"),
       backgroundImage: getStyleValue(compStyles, "background-image"),
+      ...(() => {
+        const bgImage = getStyleValue(compStyles, "background-image", "");
+        if (bgImage && bgImage.includes("gradient")) {
+          const linearMatch = bgImage.match(/linear-gradient\(([^)]+)\)/);
+          const radialMatch = bgImage.match(/radial-gradient\(([^)]+)\)/);
+          if (linearMatch) {
+            const content = linearMatch[1];
+            const parts = content.split(",").map(s => s.trim());
+            let direction = "to right";
+            let color1 = "#6366f1";
+            let color2 = "#8b5cf6";
+            
+            if (parts.length >= 3) {
+              direction = parts[0];
+              color1 = parts[1];
+              color2 = parts[2];
+            } else if (parts.length === 2) {
+              color1 = parts[0];
+              color2 = parts[1];
+            }
+            
+            const dirMatch = direction.match(/to\s+(right|left|top|bottom|top\s+right|top\s+left|bottom\s+right|bottom\s+left)/);
+            const angleMatch = direction.match(/(\d+)deg/);
+            let dir = "to right";
+            
+            if (dirMatch) {
+              dir = dirMatch[0];
+            } else if (angleMatch) {
+              const angle = parseInt(angleMatch[1]);
+              if (angle === 0 || angle === 360) dir = "to top";
+              else if (angle === 90) dir = "to right";
+              else if (angle === 180) dir = "to bottom";
+              else if (angle === 270) dir = "to left";
+              else dir = direction;
+            } else {
+              dir = direction;
+            }
+            
+            return {
+              gradientType: "linear",
+              gradientColor1: color1,
+              gradientColor2: color2,
+              gradientDirection: dir,
+            };
+          } else if (radialMatch) {
+            const content = radialMatch[1];
+            const parts = content.split(",").map(s => s.trim());
+            let color1 = "#6366f1";
+            let color2 = "#8b5cf6";
+            
+            if (parts.length >= 2) {
+              color1 = parts[parts.length - 2];
+              color2 = parts[parts.length - 1];
+            }
+            
+            return {
+              gradientType: "radial",
+              gradientColor1: color1,
+              gradientColor2: color2,
+              gradientDirection: "center",
+            };
+          }
+        }
+        return {
+          gradientType: "",
+          gradientColor1: "#6366f1",
+          gradientColor2: "#8b5cf6",
+          gradientDirection: "to right",
+        };
+      })(),
       borderWidth: getStyleValue(compStyles, "border-width"),
       borderStyle: getStyleValue(compStyles, "border-style") || "solid",
       borderColor: getStyleValue(compStyles, "border-color"),
@@ -403,7 +437,6 @@ export function StylePanel({ editor }: StylePanelProps) {
     };
   }, [editor]);
 
-  // Обработка прокрутки колесиком мыши
   useEffect(() => {
     const panelContent = panelContentRef.current;
     if (!panelContent) return;
@@ -413,10 +446,9 @@ export function StylePanel({ editor }: StylePanelProps) {
       const canScroll = target.scrollHeight > target.clientHeight;
       
       if (canScroll) {
-        // Проверяем, не находимся ли мы на интерактивном элементе
         const targetElement = e.target as HTMLElement;
         if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'SELECT' || targetElement.tagName === 'BUTTON') {
-          return; // Не перехватываем событие на интерактивных элементах
+          return;
         }
         
         target.scrollTop += e.deltaY / 2;
@@ -425,7 +457,6 @@ export function StylePanel({ editor }: StylePanelProps) {
       }
     };
 
-    // Используем capture фазу для перехвата события раньше
     panelContent.addEventListener("wheel", handleWheel, { passive: false, capture: true });
 
     return () => {
@@ -437,12 +468,9 @@ export function StylePanel({ editor }: StylePanelProps) {
     const component = selectedComponentRef.current;
     if (!component || !editor) return;
 
-    // Используем переданные стили или текущие из состояния
     const activeStyles = currentStyles || styles;
 
-    // Специальная обработка для box-shadow компонентов
     if (property.startsWith("boxShadow") && property !== "boxShadow") {
-      // Извлекаем числовую часть из значений
       const extractNumeric = (val: string): string => {
         if (!val) return "0";
         const num = val.replace(/[^0-9.\-]/g, "");
@@ -451,7 +479,6 @@ export function StylePanel({ editor }: StylePanelProps) {
 
       let x = "0", y = "0", blur = "0", spread = "0", color = "#000000";
 
-      // Определяем текущие значения с учетом обновления
       if (property === "boxShadowX") {
         x = extractNumeric(value);
         y = extractNumeric(activeStyles.boxShadowY);
@@ -487,7 +514,6 @@ export function StylePanel({ editor }: StylePanelProps) {
       const boxShadowValue = `${x}px ${y}px ${blur}px ${spread}px ${color}`;
       component.addStyle({ "box-shadow": boxShadowValue });
       
-      // Обновляем состояние с правильными значениями (с единицами для отображения)
       if (currentStyles) {
         setStyles(prev => ({
           ...prev,
@@ -506,7 +532,6 @@ export function StylePanel({ editor }: StylePanelProps) {
 
     const cssProperty = property.replace(/([A-Z])/g, "-$1").toLowerCase();
 
-    // Свойства, которые требуют единицы измерения (если значение - просто число)
     const propertiesRequiringUnits = [
       "width", "height", "min-height", "max-width", "max-height",
       "font-size", "line-height",
@@ -518,20 +543,48 @@ export function StylePanel({ editor }: StylePanelProps) {
 
     let finalValue = value;
 
-    // Если значение - просто число (без единиц) и свойство требует единицы
     if (value && value.trim() !== "" && propertiesRequiringUnits.includes(cssProperty)) {
       const numericValue = value.replace(/[^0-9.\-]/g, "");
       if (numericValue && !isNaN(parseFloat(numericValue))) {
-        // Проверяем, есть ли уже единицы в исходном значении
         const hasUnit = /(px|em|rem|%|vh|vw|pt|cm|mm|in)$/i.test(value);
         if (!hasUnit) {
-          // Определяем единицу по умолчанию для свойства
           let defaultUnit = "px";
           if (cssProperty === "font-size" || cssProperty === "line-height") {
-            defaultUnit = "px"; // можно использовать em/rem, но по умолчанию px
+            defaultUnit = "px";
           }
           finalValue = `${numericValue}${defaultUnit}`;
         }
+      }
+    }
+
+    if (property === "gradientType" || property === "gradientColor1" || property === "gradientColor2" || 
+        property === "gradientDirection") {
+      const type = property === "gradientType" ? value : (activeStyles.gradientType || "");
+      const color1 = property === "gradientColor1" ? value : (activeStyles.gradientColor1 || "#6366f1");
+      const color2 = property === "gradientColor2" ? value : (activeStyles.gradientColor2 || "#8b5cf6");
+      const direction = property === "gradientDirection" ? value : (activeStyles.gradientDirection || "to right");
+      
+      if (type === "linear") {
+        const gradientValue = `linear-gradient(${direction}, ${color1}, ${color2})`;
+        component.addStyle({ "background-image": gradientValue });
+        component.removeStyle("background-color");
+      } else if (type === "radial") {
+        const gradientValue = `radial-gradient(circle, ${color1}, ${color2})`;
+        component.addStyle({ "background-image": gradientValue });
+        component.removeStyle("background-color");
+      } else {
+        component.removeStyle("background-image");
+      }
+      
+      editor.trigger("component:update", component);
+      return;
+    }
+    
+    if (property === "backgroundColor" && value) {
+      const bgImage = component.getStyle()["background-image"];
+      const bgImageStr = typeof bgImage === "string" ? bgImage : "";
+      if (bgImageStr.includes("gradient")) {
+        component.removeStyle("background-image");
       }
     }
 
@@ -540,7 +593,6 @@ export function StylePanel({ editor }: StylePanelProps) {
     } else {
       component.addStyle({ [cssProperty]: finalValue });
       
-      // Если изменяем border-width, убеждаемся, что border-style установлен
       if (cssProperty === "border-width" && finalValue) {
         const currentBorderStyle = component.getStyle()["border-style"];
         if (!currentBorderStyle || currentBorderStyle === "none") {
@@ -558,7 +610,6 @@ export function StylePanel({ editor }: StylePanelProps) {
         ...prev,
         [property]: value,
       };
-      // Применяем стиль с новыми значениями
       applyStyle(property, value, newStyles);
       return newStyles;
     });
@@ -713,17 +764,91 @@ export function StylePanel({ editor }: StylePanelProps) {
         />
         {expandedSections.spacing && (
           <div className="styles-section-body">
-            <SpacingGrid
-              label="Внешние отступы (Margin)"
-              properties={["marginTop", "marginRight", "marginBottom", "marginLeft"]}
-              styles={styles}
+            <div className="styles-field">
+              <label>Внешние отступы (Margin)</label>
+            </div>
+            <InputWithUnit
+              label="Сверху"
+              value={styles.marginTop}
+              property="marginTop"
               onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
             />
-            <SpacingGrid
-              label="Внутренние отступы (Padding)"
-              properties={["paddingTop", "paddingRight", "paddingBottom", "paddingLeft"]}
-              styles={styles}
+            <InputWithUnit
+              label="Справа"
+              value={styles.marginRight}
+              property="marginRight"
               onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
+            />
+            <InputWithUnit
+              label="Снизу"
+              value={styles.marginBottom}
+              property="marginBottom"
+              onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
+            />
+            <InputWithUnit
+              label="Слева"
+              value={styles.marginLeft}
+              property="marginLeft"
+              onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
+            />
+            <div className="styles-field" style={{ marginTop: "16px" }}>
+              <label>Внутренние отступы (Padding)</label>
+            </div>
+            <InputWithUnit
+              label="Сверху"
+              value={styles.paddingTop}
+              property="paddingTop"
+              onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
+            />
+            <InputWithUnit
+              label="Справа"
+              value={styles.paddingRight}
+              property="paddingRight"
+              onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
+            />
+            <InputWithUnit
+              label="Снизу"
+              value={styles.paddingBottom}
+              property="paddingBottom"
+              onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
+            />
+            <InputWithUnit
+              label="Слева"
+              value={styles.paddingLeft}
+              property="paddingLeft"
+              onChange={handleChange}
+              showSlider={true}
+              sliderMin={0}
+              sliderMax={200}
+              sliderStep={1}
             />
           </div>
         )}
@@ -745,6 +870,58 @@ export function StylePanel({ editor }: StylePanelProps) {
               property="backgroundColor"
               onChange={handleChange}
             />
+            <div className="styles-field">
+              <label>Градиент</label>
+              <select
+                value={styles.gradientType}
+                onChange={(e) => handleChange("gradientType", e.target.value)}
+              >
+                <option value="">Нет</option>
+                <option value="linear">Линейный</option>
+                <option value="radial">Радиальный</option>
+              </select>
+            </div>
+            {styles.gradientType && (
+              <>
+                <ColorInput
+                  label="Цвет 1"
+                  value={styles.gradientColor1}
+                  property="gradientColor1"
+                  onChange={handleChange}
+                />
+                <ColorInput
+                  label="Цвет 2"
+                  value={styles.gradientColor2}
+                  property="gradientColor2"
+                  onChange={handleChange}
+                />
+                {styles.gradientType === "linear" && (
+                  <div className="styles-field">
+                    <label>Направление</label>
+                    <select
+                      value={styles.gradientDirection}
+                      onChange={(e) => handleChange("gradientDirection", e.target.value)}
+                    >
+                      <option value="to right">Вправо</option>
+                      <option value="to left">Влево</option>
+                      <option value="to top">Вверх</option>
+                      <option value="to bottom">Вниз</option>
+                      <option value="to top right">Вправо-вверх</option>
+                      <option value="to top left">Влево-вверх</option>
+                      <option value="to bottom right">Вправо-вниз</option>
+                      <option value="to bottom left">Влево-вниз</option>
+                    </select>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  onClick={() => handleChange("gradientType", "")}
+                  className="styles-remove-button"
+                >
+                  Убрать градиент
+                </button>
+              </>
+            )}
             <div className="styles-field">
               <label>Изображение (URL)</label>
               <input type="text" value={styles.backgroundImage.replace(/url\(|\)|"/g, "")} onChange={(e) => handleChange("backgroundImage", e.target.value ? `url("${e.target.value}")` : "")} placeholder="https://example.com/image.jpg" />

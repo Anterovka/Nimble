@@ -37,42 +37,36 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
   const STORAGE_KEY = 'deploy_vps_list';
   const CURRENT_VPS_KEY = 'deploy_current_vps';
 
-  // Загружаем список сохраненных VPS
   useEffect(() => {
     if (isOpen) {
       try {
         const savedList = localStorage.getItem(STORAGE_KEY);
         if (savedList) {
-          try {
-            const parsed = JSON.parse(savedList);
-            // Убеждаемся, что это массив
-            if (Array.isArray(parsed)) {
-              setSavedVPSList(parsed);
-              
-              // Загружаем текущий выбранный VPS
-              const currentId = localStorage.getItem(CURRENT_VPS_KEY);
-              if (currentId && parsed.find((v: any) => v.id === currentId)) {
-                loadVPS(currentId);
-                setCurrentVPSId(currentId);
-              } else if (parsed.length > 0) {
-                // Если есть сохраненные VPS, загружаем первый
-                loadVPS(parsed[0].id);
-                setCurrentVPSId(parsed[0].id);
+            try {
+              const parsed = JSON.parse(savedList);
+              if (Array.isArray(parsed)) {
+                setSavedVPSList(parsed);
+                
+                const currentId = localStorage.getItem(CURRENT_VPS_KEY);
+                if (currentId && parsed.find((v: any) => v.id === currentId)) {
+                  loadVPS(currentId);
+                  setCurrentVPSId(currentId);
+                } else if (parsed.length > 0) {
+                  loadVPS(parsed[0].id);
+                  setCurrentVPSId(parsed[0].id);
+                } else {
+                  if (user?.email) {
+                    setEmail(user.email);
+                  }
+                }
               } else {
-                // Если нет сохраненных VPS, используем email из профиля
+                console.warn('Данные в localStorage не являются массивом, очищаем');
+                localStorage.removeItem(STORAGE_KEY);
+                setSavedVPSList([]);
                 if (user?.email) {
                   setEmail(user.email);
                 }
               }
-            } else {
-              // Если это не массив, очищаем и создаем новый
-              console.warn('Данные в localStorage не являются массивом, очищаем');
-              localStorage.removeItem(STORAGE_KEY);
-              setSavedVPSList([]);
-              if (user?.email) {
-                setEmail(user.email);
-              }
-            }
           } catch (parseError) {
             console.warn('Ошибка парсинга данных из localStorage:', parseError);
             localStorage.removeItem(STORAGE_KEY);
@@ -82,7 +76,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
             }
           }
         } else {
-          // Если нет сохраненных VPS, используем email из профиля
           setSavedVPSList([]);
           if (user?.email) {
             setEmail(user.email);
@@ -98,7 +91,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
     }
   }, [isOpen, user?.email]);
 
-  // Функция загрузки данных VPS
   const loadVPS = (vpsId: string) => {
     try {
       const savedList = localStorage.getItem(STORAGE_KEY);
@@ -132,7 +124,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
     }
   };
 
-  // Функция сохранения текущего VPS
   const saveCurrentVPS = () => {
     if (!host || !username || !deployPath) {
       setError("Заполните обязательные поля для сохранения");
@@ -146,11 +137,9 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
       if (savedList) {
         try {
           const parsed = JSON.parse(savedList);
-          // Убеждаемся, что это массив
           if (Array.isArray(parsed)) {
             list = parsed;
           } else {
-            // Если это не массив, создаем новый
             console.warn('Данные в localStorage не являются массивом, создаем новый список');
             list = [];
           }
@@ -176,18 +165,15 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
       };
 
       if (currentVPSId) {
-        // Обновляем существующий
         const index = list.findIndex((v: any) => v.id === currentVPSId);
         if (index !== -1) {
           list[index] = vpsData;
         } else {
-          // Если не найден, добавляем как новый
           list.push(vpsData);
           setCurrentVPSId(vpsData.id);
           localStorage.setItem(CURRENT_VPS_KEY, vpsData.id);
         }
       } else {
-        // Добавляем новый
         list.push(vpsData);
         setCurrentVPSId(vpsData.id);
         localStorage.setItem(CURRENT_VPS_KEY, vpsData.id);
@@ -202,7 +188,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
     }
   };
 
-  // Функция создания нового VPS
   const createNewVPS = () => {
     setHost('');
     setPort('22');
@@ -220,7 +205,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
     localStorage.removeItem(CURRENT_VPS_KEY);
   };
 
-  // Функция удаления VPS
   const deleteVPS = (vpsId: string) => {
     try {
       const savedList = localStorage.getItem(STORAGE_KEY);
@@ -249,8 +233,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
     }
   };
 
-
-  // Обработчик прокрутки колесиком мыши
   useEffect(() => {
     if (!isOpen || !contentRef.current) return;
 
@@ -427,7 +409,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
               </div>
 
               {deployType === "builder_vps" ? (
-                /* Форма для деплоя на VPS сервер конструктора */
                 <div className="space-y-4">
                   {error && (
                     <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
@@ -442,9 +423,7 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
                   </div>
                 </div>
               ) : (
-                /* Форма для VPS деплоя */
                 <>
-              {/* Список сохраненных VPS */}
               {savedVPSList.length > 0 && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-white/80 mb-2">
@@ -631,7 +610,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
                   value={domain}
                   onChange={(e) => {
                     setDomain(e.target.value);
-                    // Если домен очищен, отключаем SSL
                     if (!e.target.value) {
                       setEnableSSL(false);
                     }

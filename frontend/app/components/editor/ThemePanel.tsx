@@ -12,14 +12,22 @@ import {
 
 interface ThemePanelProps {
   editor: Editor | null;
+  projectId?: number | null;
+  onClose?: () => void;
 }
 
-const THEME_STORAGE_KEY = "nimble-active-theme-id";
+export function ThemePanel({ editor, projectId, onClose }: ThemePanelProps) {
+  const getThemeStorageKey = (id: number | null | undefined) => {
+    if (id) {
+      return `nimble-theme-${id}`;
+    }
+    return "nimble-theme-default";
+  };
 
-export function ThemePanel({ editor }: ThemePanelProps) {
   const [activeThemeId, setActiveThemeId] = useState<string>(() => {
     if (typeof window !== "undefined") {
-      const stored = localStorage.getItem(THEME_STORAGE_KEY);
+      const key = getThemeStorageKey(projectId);
+      const stored = localStorage.getItem(key);
       return stored || defaultThemeId;
     }
     return defaultThemeId;
@@ -27,25 +35,29 @@ export function ThemePanel({ editor }: ThemePanelProps) {
 
   const activeTheme = projectThemes.find((t) => t.id === activeThemeId) ?? projectThemes[0];
 
-  // Восстанавливаем тему при монтировании
   useEffect(() => {
     if (!editor) return;
-    const storedThemeId = typeof window !== "undefined" ? localStorage.getItem(THEME_STORAGE_KEY) : null;
+    const key = getThemeStorageKey(projectId);
+    const storedThemeId = typeof window !== "undefined" ? localStorage.getItem(key) : null;
     if (storedThemeId) {
       const theme = projectThemes.find((t) => t.id === storedThemeId);
       if (theme) {
         setActiveThemeId(storedThemeId);
         applyProjectTheme(editor, theme);
       }
+    } else {
+      const theme = projectThemes.find((t) => t.id === defaultThemeId);
+      if (theme) {
+        setActiveThemeId(defaultThemeId);
+        applyProjectTheme(editor, theme);
+      }
     }
-  }, [editor]);
+  }, [editor, projectId]);
 
-  // Применяем тему при изменении и добавляем обработчик для новых компонентов
   useEffect(() => {
     if (!editor || !activeTheme) return;
     applyProjectTheme(editor, activeTheme);
     
-    // Обработчик для новых компонентов
     const handleComponentAdd = (component: any) => {
       if (component && activeTheme) {
         setTimeout(() => {
@@ -63,66 +75,59 @@ export function ThemePanel({ editor }: ThemePanelProps) {
     };
   }, [editor, activeTheme]);
 
-  // Обработчик выбора темы
   const handleThemeSelect = useCallback((themeId: string) => {
     setActiveThemeId(themeId);
+    const key = getThemeStorageKey(projectId);
     if (typeof window !== "undefined") {
-      localStorage.setItem(THEME_STORAGE_KEY, themeId);
+      localStorage.setItem(key, themeId);
     }
     if (editor) {
       const theme = projectThemes.find((t) => t.id === themeId);
       if (theme) {
         applyProjectTheme(editor, theme);
+        if (onClose) {
+          setTimeout(() => {
+            onClose();
+          }, 100);
+        }
       }
     }
-  }, [editor]);
+  }, [editor, projectId, onClose]);
 
   return (
-    <div className="theme-panel">
-      <div className="theme-panel-header">
-        <h3>Темы проекта</h3>
-        <p>Выберите готовую тему для всего проекта</p>
-      </div>
-      <div className="theme-panel-themes">
-        {projectThemes.map((theme) => {
-          const isActive = theme.id === activeThemeId;
-          return (
-            <button
-              key={theme.id}
-              type="button"
-              className={`theme-theme-item ${isActive ? "is-active" : ""}`}
-              onClick={() => handleThemeSelect(theme.id)}
-            >
-              <div className="theme-theme-preview" style={{
-                background: theme.background,
-                color: theme.text,
-                border: `2px solid ${theme.border}`,
-              }}>
-                <div style={{
-                  background: theme.surface,
-                  color: theme.surfaceText,
-                  padding: "8px",
-                  borderRadius: "4px",
-                  marginBottom: "8px",
-                  fontSize: "12px",
-                }}>Карточка</div>
-                <div style={{
-                  background: theme.buttonPrimary,
-                  color: theme.buttonPrimaryText,
-                  padding: "6px 12px",
-                  borderRadius: "6px",
-                  fontSize: "11px",
-                  display: "inline-block",
-                }}>Кнопка</div>
+    <div className="theme-panel-grid">
+      {projectThemes.map((theme) => {
+        const isActive = theme.id === activeThemeId;
+        return (
+          <button
+            key={theme.id}
+            type="button"
+            className={`theme-card ${isActive ? "theme-card-active" : ""}`}
+            onClick={() => handleThemeSelect(theme.id)}
+            style={{ background: theme.background }}
+          >
+            <div className="theme-card-preview">
+              <div className="theme-card-sample" style={{ background: theme.surface, color: theme.surfaceText }}>
+                <div className="theme-card-sample-text" style={{ color: theme.text }}>Текст</div>
+                <div className="theme-card-sample-button" style={{ background: theme.buttonPrimary, color: theme.buttonPrimaryText }}>
+                  Кнопка
+                </div>
               </div>
-              <div className="theme-theme-info">
-                <div className="theme-theme-name">{theme.name}</div>
-                <div className="theme-theme-desc">{theme.description}</div>
+            </div>
+            <div className="theme-card-info">
+              <div className="theme-card-name" style={{ color: theme.text }}>{theme.name}</div>
+              <div className="theme-card-description" style={{ color: theme.text, opacity: 0.8 }}>{theme.description}</div>
+            </div>
+            {isActive && (
+              <div className="theme-card-badge">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="20 6 9 17 4 12" />
+                </svg>
               </div>
-            </button>
-          );
-        })}
-      </div>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }

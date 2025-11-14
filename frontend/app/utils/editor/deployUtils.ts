@@ -248,9 +248,6 @@ async function inlineAssets(html: string, css: string): Promise<{ html: string; 
   return { html: processedHtml, css: processedCss };
 }
 
-/**
- * Создаёт HTML и CSS с извлеченными изображениями
- */
 export async function buildDeployFiles(editor: any): Promise<{ html: string; css: string; images: Map<string, Blob> }> {
   const html = editor.getHtml();
   const css = editor.getCss();
@@ -284,9 +281,6 @@ body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-
   return { html: fullHtml, css: processedCss, images };
 }
 
-/**
- * Создаёт ZIP архив с index.html, styles.css и изображениями
- */
 export async function createDeployZip(
   htmlContent: string,
   cssContent: string,
@@ -313,9 +307,6 @@ export async function createDeployZip(
   return await zip.generateAsync({ type: 'blob' });
 }
 
-/**
- * Интерфейс параметров деплоя
- */
 export interface DeployParams {
   deployType?: 'vps' | 'builder_vps';
   host?: string;
@@ -330,9 +321,6 @@ export interface DeployParams {
   projectId?: number | null;
 }
 
-/**
- * Деплой сайта на VPS
- */
 export async function deployToVPS(
   editor: any,
   params: DeployParams,
@@ -377,15 +365,13 @@ export async function deployToVPS(
         formData.append('email', params.email);
       }
       formData.append('nginx_config', params.nginxConfig ? 'true' : 'false');
-      formData.append('enable_ssl', params.enableSSL ? 'true' : 'false');
+        formData.append('enable_ssl', params.enableSSL ? 'true' : 'false');
     }
-    // Для builder_vps параметры не нужны - используются из админки
     
     if (params.projectId) {
       formData.append('project_id', params.projectId.toString());
     }
     
-    // Отправляем на бэкенд
     const response = await apiClient.post('/deploy/', formData) as {
       success: boolean;
       message: string;
@@ -409,4 +395,3 @@ export async function deployToVPS(
     };
   }
 }
-

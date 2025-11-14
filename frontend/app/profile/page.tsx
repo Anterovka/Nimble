@@ -57,11 +57,9 @@ export default function ProfilePage() {
       setError(null);
       const data = await getUserProjects();
       
-      // Проверяем, что data - это массив
       if (Array.isArray(data)) {
         setProjects(data);
       } else if (data && typeof data === 'object' && 'results' in data) {
-        // Если API возвращает объект с пагинацией
         const results = (data as { results: ProjectListItem[] }).results;
         if (Array.isArray(results)) {
           setProjects(results);
@@ -70,7 +68,6 @@ export default function ProfilePage() {
           setProjects([]);
         }
       } else {
-        // Если это не массив и не объект с results, устанавливаем пустой массив
         console.warn("API вернул неожиданный формат данных:", data);
         setProjects([]);
       }
@@ -243,7 +240,7 @@ ${project.html_content || ''}
                 </div>
                 <div className="bg-white/5 rounded-lg p-4 border border-white/10">
                   <div className="text-lg font-bold text-white mb-1">
-                    {subscription?.subscription_type === 'premium' ? 'Премиум' : 'Бесплатная'}
+                    {subscription?.subscription_type === 'premium' ? 'Подписка (Премиум)' : 'Подписка (Пробная)'}
                   </div>
                   {subscription && (
                     <div className="text-white/40 text-xs mt-2">
@@ -454,19 +451,29 @@ ${project.html_content || ''}
 
                       <p className="text-sm text-white/60 mb-4">{formatDate(project.updated_at)}</p>
 
-                      <div className="flex flex-wrap gap-2 sm:flex-nowrap mt-auto">
+                      <div className="flex gap-2 mt-auto w-full">
                         <Link
                           href={`/editor?project=${project.id}`}
-                          className="flex-1 min-w-[140px] px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors text-center"
+                          className="flex-1 px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors text-center"
                         >
                           Редактировать
                         </Link>
                         <button
                           onClick={() => handleDelete(project.id)}
                           disabled={deletingId === project.id}
-                          className="px-3 py-2 flex items-center justify-center border border-red-500/60 text-red-300 rounded-lg text-sm font-semibold hover:bg-red-500/15 hover:text-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed whitespace-nowrap shrink-0"
+                          className="px-4 py-2 flex items-center justify-center border border-red-500/60 text-red-300 rounded-lg text-sm font-semibold hover:bg-red-500/15 hover:text-red-100 transition-colors disabled:opacity-60 disabled:cursor-not-allowed shrink-0"
+                          title="Удалить проект"
                         >
-                          {deletingId === project.id ? "Удаление..." : "Удалить"}
+                          {deletingId === project.id ? (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="animate-spin">
+                              <circle cx="12" cy="12" r="10" opacity="0.25" />
+                              <path d="M12 2v4M12 18v4M4.93 4.93l2.83 2.83M16.24 16.24l2.83 2.83M2 12h4M18 12h4M4.93 19.07l2.83-2.83M16.24 7.76l2.83-2.83" />
+                            </svg>
+                          ) : (
+                            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                              <path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2m3 0v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6h14z" />
+                            </svg>
+                          )}
                         </button>
                       </div>
                     </div>

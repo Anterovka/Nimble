@@ -39,4 +39,3 @@ export function exportHTML(editor: any) {
     URL.revokeObjectURL(cssUrl);
   }, 100);
 }
-

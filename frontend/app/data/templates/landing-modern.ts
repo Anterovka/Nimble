@@ -33,7 +33,6 @@ export const landingModernTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif; }
-a:hover { text-decoration: underline; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2rem !important; }

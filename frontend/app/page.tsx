@@ -322,7 +322,7 @@ export default function Home() {
             viewport={{ once: true }}
             transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
           >
-            Бесплатно •  Без ограничений
+            Пробно •  Без ограничений
           </motion.p>
         </div>
       </AnimatedSection>

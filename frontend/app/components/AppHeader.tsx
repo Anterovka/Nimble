@@ -11,7 +11,6 @@ export function AppHeader() {
 
   const [isSuperuser, setIsSuperuser] = useState(false);
   
-  // Проверяем права суперпользователя
   useEffect(() => {
     const checkSuperuser = async () => {
       if (!user) return;
@@ -20,14 +19,12 @@ export function AppHeader() {
         const profile = await apiClient.get<any>('/auth/profile/');
         setIsSuperuser(profile.is_superuser || false);
       } catch (err) {
-        // Игнорируем ошибки проверки прав
       }
     };
     
     checkSuperuser();
   }, [user]);
   
-  // Навигационные элементы с учетом прав суперпользователя
   const navItems = useMemo(() => {
     const items: Array<{ href: string; label: string }> = [
       { href: "/profile", label: "Мои проекты" },
@@ -83,7 +80,7 @@ export function AppHeader() {
           </span>
         </Link>
 
-        <div className="hidden md:flex items-center gap-2 flex-1 justify-center">
+        <div className="hidden min-[950px]:flex items-center gap-2 flex-1 justify-center">
           {navItems.map((item) => {
             const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
             return (
@@ -103,36 +100,6 @@ export function AppHeader() {
         </div>
 
         <div className="flex items-center gap-3">
-          <Link
-            href="/profile"
-            className={`md:hidden px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              pathname.startsWith("/profile")
-                ? "bg-white text-black shadow-[0_8px_24px_rgba(255,255,255,0.15)]"
-                : "border border-white/20 text-white hover:border-white/40 hover:bg-white/5"
-            }`}
-          >
-            Профиль
-          </Link>
-          <Link
-            href="/templates"
-            className={`md:hidden px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              pathname.startsWith("/templates")
-                ? "bg-white text-black shadow-[0_8px_24px_rgba(255,255,255,0.15)]"
-                : "border border-white/20 text-white hover:border-white/40 hover:bg-white/5"
-            }`}
-          >
-            Шаблоны
-          </Link>
-          <Link
-            href="/subscription"
-            className={`md:hidden px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-              pathname.startsWith("/subscription")
-                ? "bg-white text-black shadow-[0_8px_24px_rgba(255,255,255,0.15)]"
-                : "border border-white/20 text-white hover:border-white/40 hover:bg-white/5"
-            }`}
-          >
-            Подписка
-          </Link>
           {isAuthenticated && user && (
             <div className="flex items-center gap-3">
               <Link

@@ -31,7 +31,3 @@ export const TEMPLATES: Template[] = [
   musicLabelTemplate,
 ];
 
-
-
-
-

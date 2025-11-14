@@ -45,10 +45,6 @@ body {
   line-height: 1.6;
 }
 
-main a:hover,
-header a:hover,
-footer a:hover {
-  text-decoration: underline;
 }`,
 };
 

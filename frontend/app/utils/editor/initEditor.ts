@@ -1012,4 +1012,3 @@ function createDefaultLabel(block: { name: string; preview?: string; description
     </div>
   `;
 }
-

@@ -126,19 +126,16 @@ export const musicLabelTemplate: Template = {
       <h3 style="font-size: 2rem; font-weight: 900; margin-bottom: 2rem; letter-spacing: 2px;">SOUNDWAVE</h3>
       <p style="color: #666; margin-bottom: 1rem;">Независимый музыкальный лейбл</p>
       <div style="display: flex; justify-content: center; gap: 2rem; margin-top: 2rem;">
-        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Spotify</a>
+        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Яндекс Музыка</a>
         <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Apple Music</a>
-        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">YouTube</a>
-        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Instagram</a>
+        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">Rutube</a>
+        <a href="#" style="color: #888; text-decoration: none; font-weight: 500;">ВКонтакте</a>
       </div>
     </div>
   </footer>
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-button:hover { box-shadow: 0 10px 40px rgba(255, 0, 110, 0.6) !important; }
-div[style*="cursor: pointer"]:hover { border-color: #ff006e !important; }
-a:hover { color: #ff006e !important; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 3rem !important; line-height: 1.1 !important; }

@@ -30,18 +30,14 @@ export function TemplateChoiceModal({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
-      // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
       if (previewTemplate) return;
-      
       if (event.key === "Escape") {
         onClose();
       }
     };
 
     const handleClickOutside = (event: MouseEvent) => {
-      // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
       if (previewTemplate) return;
-      
       if (!contentRef.current) return;
       if (!contentRef.current.contains(event.target as Node)) {
         onClose();
@@ -60,9 +56,8 @@ export function TemplateChoiceModal({
     };
   }, [isOpen, onClose, previewTemplate]);
 
-  // Прокрутка колесиком мыши для body модального окна
   useEffect(() => {
-    if (!isOpen || !modalBodyRef.current) return;
+    if (!isOpen || !modalBodyRef.current || previewTemplate) return;
 
     const modalBody = modalBodyRef.current;
 
@@ -71,6 +66,21 @@ export function TemplateChoiceModal({
       const canScroll = target.scrollHeight > target.clientHeight;
       
       if (canScroll) {
+        const targetElement = e.target as HTMLElement;
+        if (targetElement.tagName === 'INPUT' || targetElement.tagName === 'SELECT' || targetElement.tagName === 'BUTTON' || targetElement.tagName === 'TEXTAREA') {
+          return;
+        }
+        
+        const scrollTop = target.scrollTop;
+        const scrollHeight = target.scrollHeight;
+        const clientHeight = target.clientHeight;
+        const isAtTop = scrollTop <= 1;
+        const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
+        
+        if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+          return;
+        }
+        
         target.scrollTop += e.deltaY / 2;
         e.preventDefault();
         e.stopPropagation();
@@ -82,10 +92,9 @@ export function TemplateChoiceModal({
     return () => {
       modalBody.removeEventListener('wheel', handleWheel, { capture: true } as EventListenerOptions);
     };
-  }, [isOpen]);
+  }, [isOpen, previewTemplate]);
 
   const handleTemplateSelect = (template: Template) => {
-    // Сохраняем шаблон в localStorage для загрузки в редакторе
     localStorage.setItem("nimble-template", JSON.stringify(template));
     router.push("/editor?template=" + template.id);
     onClose();
@@ -108,11 +117,9 @@ export function TemplateChoiceModal({
     setPreviewTemplate(null);
   }, []);
 
-  // Оптимизированная загрузка HTML в iframe для карточек
   const loadCardPreview = useCallback((template: Template, iframe: HTMLIFrameElement | null) => {
     if (!iframe || loadedIframesRef.current.has(template.id)) return;
     
-    // Используем requestIdleCallback для отложенной загрузки
     const loadContent = () => {
       if (!iframe) return;
       const doc = iframe.contentDocument || iframe.contentWindow?.document;
@@ -143,7 +150,6 @@ ${template.html}
     }
   }, []);
 
-  // Загрузка HTML в iframe для полноэкранного предпросмотра
   useEffect(() => {
     if (!previewTemplate || !previewIframeRef.current) return;
 
@@ -168,7 +174,6 @@ ${previewTemplate.html}
     }
   }, [previewTemplate]);
 
-  // Обработка прокрутки для контейнера с iframe предпросмотра
   useEffect(() => {
     if (!previewTemplate) return;
 
@@ -181,13 +186,11 @@ ${previewTemplate.html}
       
       if (!canScroll) return;
       
-      // Проверяем, не находимся ли мы на интерактивном элементе
       const target = e.target as HTMLElement;
       if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'BUTTON' || target.tagName === 'TEXTAREA')) {
         return;
       }
       
-      // Проверяем границы прокрутки
       const scrollTop = container.scrollTop;
       const scrollHeight = container.scrollHeight;
       const clientHeight = container.clientHeight;
@@ -198,13 +201,11 @@ ${previewTemplate.html}
         return;
       }
       
-      // Прокручиваем контейнер
       container.scrollTop += e.deltaY * 1.5;
       e.preventDefault();
       e.stopPropagation();
     };
 
-    // Также обрабатываем прокрутку внутри iframe
     const handleIframeWheel = (e: WheelEvent) => {
       const iframe = previewIframeRef.current;
       if (!iframe) return;
@@ -217,7 +218,6 @@ ${previewTemplate.html}
       
       const canScroll = iframeBody.scrollHeight > iframeBody.clientHeight;
       if (!canScroll) {
-        // Если iframe не может прокручиваться, прокручиваем контейнер
         const container = iframeContainer as HTMLElement;
         if (container.scrollHeight > container.clientHeight) {
           container.scrollTop += e.deltaY * 1.5;
@@ -227,7 +227,6 @@ ${previewTemplate.html}
         return;
       }
       
-      // Прокручиваем внутри iframe
       const scrollTop = iframeBody.scrollTop;
       const scrollHeight = iframeBody.scrollHeight;
       const clientHeight = iframeBody.clientHeight;
@@ -245,7 +244,6 @@ ${previewTemplate.html}
 
     iframeContainer.addEventListener("wheel", handleWheel, { passive: false, capture: true });
     
-    // Обрабатываем прокрутку на самом iframe
     const iframe = previewIframeRef.current;
     if (iframe) {
       iframe.addEventListener("wheel", handleIframeWheel, { passive: false, capture: true });
@@ -259,7 +257,6 @@ ${previewTemplate.html}
     };
   }, [previewTemplate]);
 
-  // Обработка Escape для закрытия модального окна предпросмотра
   useEffect(() => {
     if (!previewTemplate) return;
 
@@ -281,10 +278,8 @@ ${previewTemplate.html}
     };
   }, [previewTemplate, closePreview]);
 
-  // Intersection Observer для ленивой загрузки iframe
   useEffect(() => {
     if (!isOpen) {
-      // Очищаем загруженные iframe при закрытии модального окна
       loadedIframesRef.current.clear();
       if (observerRef.current) {
         observerRef.current.disconnect();
@@ -293,10 +288,8 @@ ${previewTemplate.html}
       return;
     }
 
-    // Фильтруем шаблон "пустой белый" для observer
     const availableTemplates = TEMPLATES.filter(t => t.id !== 'blank-white');
 
-    // Создаем observer для загрузки только видимых iframe
     observerRef.current = new IntersectionObserver(
       (entries) => {
         entries.forEach((entry) => {
@@ -315,12 +308,11 @@ ${previewTemplate.html}
       },
       {
         root: contentRef.current,
-        rootMargin: "50px", // Начинаем загрузку за 50px до появления в viewport
+        rootMargin: "50px",
         threshold: 0.1,
       }
     );
 
-    // Наблюдаем за iframe после небольшой задержки, чтобы они успели отрендериться
     const timeoutId = setTimeout(() => {
       const iframes = Array.from(document.querySelectorAll('[data-template-id]'));
       iframes.forEach((iframe) => {
@@ -341,7 +333,6 @@ ${previewTemplate.html}
 
   if (!isOpen) return null;
 
-  // Фильтруем шаблон "пустой белый", так как есть кнопка сверху
   const availableTemplates = TEMPLATES.filter(t => t.id !== 'blank-white');
 
   return (
@@ -350,7 +341,6 @@ ${previewTemplate.html}
         className="editor-theme-modal__backdrop"
         aria-hidden="true"
         onClick={(e) => {
-          // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
           if (previewTemplate) return;
           if (e.target === e.currentTarget) {
             onClose();
@@ -372,7 +362,6 @@ ${previewTemplate.html}
             type="button"
             className="editor-theme-modal__close"
             onClick={(e) => {
-              // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
               if (previewTemplate) return;
               onClose();
             }}
@@ -386,7 +375,6 @@ ${previewTemplate.html}
         </header>
         <div ref={modalBodyRef} className="editor-theme-modal__body">
           <div className="space-y-6">
-            {/* Кнопка пустого проекта */}
             <div className="mb-6">
               <button
                 onClick={handleBlankProject}
@@ -408,7 +396,6 @@ ${previewTemplate.html}
               </button>
             </div>
 
-            {/* Шаблоны */}
             <div>
               <h3 className="text-lg font-semibold text-white mb-4">Готовые шаблоны</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -417,14 +404,12 @@ ${previewTemplate.html}
                     key={template.id}
                     className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-colors flex flex-col"
                   >
-                    {/* Preview iframe */}
                     <div className="relative w-full h-48 bg-white/5 border-b border-white/10 overflow-hidden">
                       <iframe
                         ref={(el) => {
                           if (el) {
                             cardIframeRefs.current.set(template.id, el);
                             el.dataset.templateId = template.id;
-                            // Добавляем в observer после небольшой задержки
                             setTimeout(() => {
                               if (observerRef.current && el.dataset.templateId) {
                                 observerRef.current.observe(el);
@@ -441,26 +426,26 @@ ${previewTemplate.html}
                       />
                     </div>
                     
-                    <div className="p-6 flex flex-col flex-1">
-                      <h3 className="text-xl font-bold mb-2">{template.name}</h3>
-                      <p className="text-white/60 text-sm mb-4">{template.description}</p>
-                      <div className="flex items-center justify-between gap-2 mt-auto">
-                        <span className="px-2 py-1 bg-white/10 text-white/80 text-xs rounded">
+                    <div className="p-4 sm:p-6 flex flex-col flex-1">
+                      <h3 className="text-lg sm:text-xl font-bold mb-2">{template.name}</h3>
+                      <p className="text-white/60 text-xs sm:text-sm mb-4">{template.description}</p>
+                      <div className="flex items-center justify-between gap-2 mt-auto flex-wrap">
+                        <span className="px-2 py-1 bg-white/10 text-white/80 text-xs rounded shrink-0">
                           {template.category}
                         </span>
-                        <div className="flex gap-2">
+                        <div className="flex gap-2 shrink-0">
                           <button
                             onClick={(e) => {
                               e.stopPropagation();
                               handlePreview(template);
                             }}
-                            className="px-3 py-2 border border-white/20 text-white rounded-lg text-sm font-semibold hover:border-white/40 hover:bg-white/5 transition-colors"
+                            className="px-2 py-1.5 sm:px-3 sm:py-2 border border-white/20 text-white rounded-lg text-xs sm:text-sm font-semibold hover:border-white/40 hover:bg-white/5 transition-colors whitespace-nowrap"
                           >
                             Превью
                           </button>
                           <button
                             onClick={() => handleTemplateSelect(template)}
-                            className="px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors"
+                            className="px-2.5 py-1.5 bg-white text-black rounded-lg text-xs sm:text-sm font-semibold hover:bg-white/90 transition-colors whitespace-nowrap"
                           >
                             Использовать
                           </button>
@@ -475,7 +460,7 @@ ${previewTemplate.html}
         </div>
       </div>
 
-      {/* Preview Modal - используем Portal для вынесения за пределы родительского модального окна */}
+      {/* Модальное окно предпросмотра через Portal */}
       {previewTemplate && typeof window !== 'undefined' && createPortal(
         <div 
           className="fixed inset-0 flex items-center justify-center p-4"

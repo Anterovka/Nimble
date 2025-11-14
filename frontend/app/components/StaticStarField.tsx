@@ -8,11 +8,9 @@ interface StaticStarFieldProps {
 }
 
 export function StaticStarField({ className = "", starCount = 100 }: StaticStarFieldProps) {
-  // Генерируем звезды только на клиенте, чтобы избежать hydration mismatch
   const [stars, setStars] = useState<Array<{ id: number; x: number; y: number; size: number; opacity: number }>>([]);
 
   useEffect(() => {
-    // Генерируем звезды только на клиенте
     setStars(
       Array.from({ length: starCount }, (_, i) => ({
         id: i,

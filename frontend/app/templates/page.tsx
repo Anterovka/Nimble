@@ -29,7 +29,6 @@ export default function TemplatesPage() {
       return;
     }
 
-    // Сохраняем шаблон в localStorage для загрузки в редакторе
     localStorage.setItem("nimble-template", JSON.stringify(template));
     router.push("/editor?template=" + template.id);
   };
@@ -42,7 +41,6 @@ export default function TemplatesPage() {
     setPreviewTemplate(null);
   };
 
-  // Загрузка HTML в iframe для предпросмотра в модальном окне
   useEffect(() => {
     if (!previewTemplate || !previewIframeRef.current) return;
 
@@ -67,7 +65,6 @@ ${previewTemplate.html}
     }
   }, [previewTemplate]);
 
-  // Обработка Escape для закрытия модального окна
   useEffect(() => {
     if (!previewTemplate) return;
 

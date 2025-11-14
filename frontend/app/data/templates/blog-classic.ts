@@ -54,9 +54,6 @@ export const blogClassicTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: Georgia, serif; color: #000; background: #fff; line-height: 1.6; }
-a:hover { text-decoration: underline; }
-footer a:hover,
-header nav a:hover { color: #1d4ed8; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h1 { font-size: 2rem !important; }

@@ -137,8 +137,6 @@ export const fitnessCoachTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-button:hover { }
-a:hover { color: #ff6b35 !important; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; line-height: 1.2 !important; }

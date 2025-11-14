@@ -18,25 +18,19 @@ export class ApiClient {
     data?: unknown
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
-    
-    // Получаем токен из localStorage
     const accessToken = typeof window !== 'undefined' 
       ? localStorage.getItem('access_token') 
       : null;
 
-    // Проверяем, является ли data FormData
     const isFormData = data instanceof FormData || (data && typeof data === 'object' && data.constructor?.name === 'FormData');
-
     const headers = new Headers();
 
-    // Не устанавливаем Content-Type для FormData (браузер установит его автоматически с boundary)
     if (!isFormData) {
       headers.set('Content-Type', 'application/json');
     }
 
     if (options.headers) {
       new Headers(options.headers).forEach((value, key) => {
-        // Не перезаписываем Content-Type для FormData
         if (!(isFormData && key.toLowerCase() === 'content-type')) {
           headers.set(key, value);
         }
@@ -47,7 +41,6 @@ export class ApiClient {
       headers.set('Authorization', `Bearer ${accessToken}`);
     }
 
-    // Подготавливаем body
     let body: BodyInit | undefined;
     if (data) {
       if (isFormData) {
@@ -74,7 +67,6 @@ export class ApiClient {
           message: typeof data.detail === 'string' ? data.detail : data.message || 'Произошла ошибка',
           detail: data,
         };
-        // Добавляем поля ошибки валидации (например, slug) в объект ошибки
         if (data && typeof data === 'object') {
           Object.assign(error, data);
         }
