@@ -1,5 +1,3 @@
-# NimbleCopy Backend API
-
 Django REST API для конструктора одностраничных сайтов.
 
 ## Быстрый старт
@@ -142,3 +140,4 @@ backend/
     ├── serializers.py
     └── urls.py
 ```
+
