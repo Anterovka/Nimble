@@ -719,6 +719,8 @@ function EditorContent() {
 
   // Обработка прокрутки колесиком для правой панели
   useEffect(() => {
+    if (!showRightPanel) return;
+    
     const panelContent = rightPanelContentRef.current;
     if (!panelContent) return;
 
@@ -726,40 +728,50 @@ function EditorContent() {
       const target = panelContent;
       const canScroll = target.scrollHeight > target.clientHeight;
       
-      if (canScroll) {
-        // Проверяем, не находимся ли мы на интерактивном элементе
-        const targetElement = e.target as HTMLElement;
-        const isInteractive = targetElement.tagName === 'INPUT' || 
-                             targetElement.tagName === 'SELECT' || 
-                             targetElement.tagName === 'BUTTON' ||
-                             targetElement.closest('input[type="range"]') ||
-                             targetElement.closest('.styles-slider');
-        
-        if (isInteractive) {
-          return; // Не перехватываем событие на интерактивных элементах
-        }
-        
-        // Проверяем, достигли ли мы границ прокрутки
-        const isAtTop = target.scrollTop <= 0;
-        const isAtBottom = target.scrollTop >= target.scrollHeight - target.clientHeight;
-        
-        // Если прокрутка вверх и мы наверху, или вниз и мы внизу - не перехватываем
-        if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
-          return;
-        }
-        
-        target.scrollTop += e.deltaY;
-        e.preventDefault();
-        e.stopPropagation();
+      if (!canScroll) return;
+      
+      // Проверяем, не находимся ли мы на интерактивном элементе
+      const targetElement = e.target as HTMLElement;
+      if (!targetElement) return;
+      
+      const isInteractive = targetElement.tagName === 'INPUT' || 
+                           targetElement.tagName === 'SELECT' || 
+                           targetElement.tagName === 'BUTTON' ||
+                           targetElement.tagName === 'TEXTAREA' ||
+                           targetElement.closest('input[type="range"]') ||
+                           targetElement.closest('.styles-slider') ||
+                           targetElement.closest('.styles-color-input') ||
+                           targetElement.isContentEditable;
+      
+      if (isInteractive) {
+        return; // Не перехватываем событие на интерактивных элементах
       }
+      
+      // Проверяем, достигли ли мы границ прокрутки
+      const scrollTop = target.scrollTop;
+      const scrollHeight = target.scrollHeight;
+      const clientHeight = target.clientHeight;
+      const isAtTop = scrollTop <= 1;
+      const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
+      
+      // Если прокрутка вверх и мы наверху, или вниз и мы внизу - не перехватываем
+      if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+        return;
+      }
+      
+      // Прокручиваем с увеличенной скоростью
+      target.scrollTop += e.deltaY * 1.5;
+      e.preventDefault();
+      e.stopPropagation();
     };
 
-    panelContent.addEventListener("wheel", handleWheel, { passive: false });
+    // Используем capture фазу для перехвата события раньше
+    panelContent.addEventListener("wheel", handleWheel, { passive: false, capture: true });
 
     return () => {
-      panelContent.removeEventListener("wheel", handleWheel);
+      panelContent.removeEventListener("wheel", handleWheel, { capture: true } as EventListenerOptions);
     };
-  }, [showRightPanel, rightPanelTab]);
+  }, [showRightPanel, rightPanelTab, editorReady]);
 
   useEffect(() => {
     if (typeof window === "undefined") {

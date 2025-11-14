@@ -100,7 +100,7 @@ export const fitnessCoachTemplate: Template = {
             </ul>
             <button style="width: 100%; padding: 1rem; background: transparent; color: white; border: 2px solid #333; border-radius: 12px; font-weight: 700; cursor: pointer;">Выбрать</button>
           </div>
-          <div style="background: linear-gradient(135deg, #ff6b35, #f7931e); border: 2px solid #ff6b35; padding: 3rem; border-radius: 20px; transform: scale(1.05);">
+          <div style="background: linear-gradient(135deg, #ff6b35, #f7931e); border: 2px solid #ff6b35; padding: 3rem; border-radius: 20px;">
             <div style="display: inline-block; padding: 0.25rem 0.75rem; background: rgba(255,255,255,0.2); border-radius: 20px; margin-bottom: 1rem; font-size: 0.8rem; font-weight: 700;">ПОПУЛЯРНЫЙ</div>
             <h4 style="font-size: 1.5rem; font-weight: 800; margin-bottom: 1rem;">Премиум</h4>
             <div style="font-size: 3rem; font-weight: 900; margin-bottom: 1rem;">6,000 ₽<span style="font-size: 1rem; opacity: 0.8; font-weight: 400;">/мес</span></div>
@@ -137,8 +137,8 @@ export const fitnessCoachTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-button:hover { transform: translateY(-2px); transition: transform 0.2s; }
-a:hover { color: #ff6b35 !important; transition: color 0.2s; }
+button:hover { }
+a:hover { color: #ff6b35 !important; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; line-height: 1.2 !important; }

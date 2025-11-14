@@ -31,6 +31,15 @@ interface StyleValues {
   borderStyle: string;
   borderColor: string;
   borderRadius: string;
+  boxShadow: string;
+  boxShadowX: string;
+  boxShadowY: string;
+  boxShadowBlur: string;
+  boxShadowSpread: string;
+  boxShadowColor: string;
+  textShadow: string;
+  opacity: string;
+  transform: string;
 }
 
 type StyleKey = keyof StyleValues;
@@ -42,6 +51,9 @@ const defaultStyles: StyleValues = {
   paddingTop: "", paddingRight: "", paddingBottom: "", paddingLeft: "",
   backgroundColor: "", backgroundImage: "",
   borderWidth: "", borderStyle: "solid", borderColor: "", borderRadius: "",
+  boxShadow: "", boxShadowX: "0", boxShadowY: "0", boxShadowBlur: "0", boxShadowSpread: "0", boxShadowColor: "#000000",
+  textShadow: "", opacity: "1",
+  transform: "",
 };
 
 const getStyleValue = (styles: Record<string, unknown>, property: string, fallback = ""): string => {
@@ -134,8 +146,10 @@ const InputWithUnit = ({
       return;
     }
 
-    // Сохраняем только число без единиц (временно, единицы добавятся при blur)
-    onChange(property, cleanedValue);
+    // Применяем значение с единицами сразу, чтобы изменения отображались на сайте
+    // Но в поле показываем только число
+    const valueWithUnit = `${cleanedValue}${currentUnit}`;
+    onChange(property, valueWithUnit);
   };
 
   const handleInputFocus = () => {
@@ -283,6 +297,8 @@ export function StylePanel({ editor }: StylePanelProps) {
     spacing: false,
     background: false,
     borders: false,
+    shadows: false,
+    effects: false,
   });
   const selectedComponentRef = useRef<Component | null>(null);
   const panelContentRef = useRef<HTMLDivElement>(null);
@@ -294,6 +310,25 @@ export function StylePanel({ editor }: StylePanelProps) {
     }
 
     const compStyles = (component.getStyle?.() ?? {}) as Record<string, unknown>;
+
+    // Парсинг box-shadow
+    const boxShadowValue = getStyleValue(compStyles, "box-shadow");
+    let boxShadowX = "0px", boxShadowY = "0px", boxShadowBlur = "0px", boxShadowSpread = "0px", boxShadowColor = "#000000";
+    if (boxShadowValue && boxShadowValue !== "none") {
+      // Парсим box-shadow: offsetX offsetY blur spread color
+      const shadowMatch = boxShadowValue.match(/(-?\d+(?:\.\d+)?)(px|em|rem)?\s+(-?\d+(?:\.\d+)?)(px|em|rem)?\s+(-?\d+(?:\.\d+)?)(px|em|rem)?\s+(-?\d+(?:\.\d+)?)(px|em|rem)?\s*(.+)?/);
+      if (shadowMatch) {
+        const unit = shadowMatch[2] || shadowMatch[4] || shadowMatch[6] || shadowMatch[8] || "px";
+        boxShadowX = `${shadowMatch[1] || "0"}${unit}`;
+        boxShadowY = `${shadowMatch[3] || "0"}${unit}`;
+        boxShadowBlur = `${shadowMatch[5] || "0"}${unit}`;
+        boxShadowSpread = `${shadowMatch[7] || "0"}${unit}`;
+        boxShadowColor = shadowMatch[9]?.trim() || "#000000";
+      }
+    }
+
+    // Парсинг text-shadow
+    const textShadowValue = getStyleValue(compStyles, "text-shadow");
 
     setStyles({
       width: getStyleValue(compStyles, "width"),
@@ -319,6 +354,15 @@ export function StylePanel({ editor }: StylePanelProps) {
       borderStyle: getStyleValue(compStyles, "border-style") || "solid",
       borderColor: getStyleValue(compStyles, "border-color"),
       borderRadius: getStyleValue(compStyles, "border-radius"),
+      boxShadow: boxShadowValue,
+      boxShadowX,
+      boxShadowY,
+      boxShadowBlur,
+      boxShadowSpread,
+      boxShadowColor,
+      textShadow: textShadowValue,
+      opacity: getStyleValue(compStyles, "opacity", "1"),
+      transform: getStyleValue(compStyles, "transform"),
     });
   };
 
@@ -389,22 +433,118 @@ export function StylePanel({ editor }: StylePanelProps) {
     };
   }, [selectedComponent]);
 
-  const applyStyle = (property: StyleKey, value: string) => {
+  const applyStyle = (property: StyleKey, value: string, currentStyles?: StyleValues) => {
     const component = selectedComponentRef.current;
     if (!component || !editor) return;
 
+    // Используем переданные стили или текущие из состояния
+    const activeStyles = currentStyles || styles;
+
+    // Специальная обработка для box-shadow компонентов
+    if (property.startsWith("boxShadow") && property !== "boxShadow") {
+      // Извлекаем числовую часть из значений
+      const extractNumeric = (val: string): string => {
+        if (!val) return "0";
+        const num = val.replace(/[^0-9.\-]/g, "");
+        return num || "0";
+      };
+
+      let x = "0", y = "0", blur = "0", spread = "0", color = "#000000";
+
+      // Определяем текущие значения с учетом обновления
+      if (property === "boxShadowX") {
+        x = extractNumeric(value);
+        y = extractNumeric(activeStyles.boxShadowY);
+        blur = extractNumeric(activeStyles.boxShadowBlur);
+        spread = extractNumeric(activeStyles.boxShadowSpread);
+        color = activeStyles.boxShadowColor || "#000000";
+      } else if (property === "boxShadowY") {
+        x = extractNumeric(activeStyles.boxShadowX);
+        y = extractNumeric(value);
+        blur = extractNumeric(activeStyles.boxShadowBlur);
+        spread = extractNumeric(activeStyles.boxShadowSpread);
+        color = activeStyles.boxShadowColor || "#000000";
+      } else if (property === "boxShadowBlur") {
+        x = extractNumeric(activeStyles.boxShadowX);
+        y = extractNumeric(activeStyles.boxShadowY);
+        blur = extractNumeric(value);
+        spread = extractNumeric(activeStyles.boxShadowSpread);
+        color = activeStyles.boxShadowColor || "#000000";
+      } else if (property === "boxShadowSpread") {
+        x = extractNumeric(activeStyles.boxShadowX);
+        y = extractNumeric(activeStyles.boxShadowY);
+        blur = extractNumeric(activeStyles.boxShadowBlur);
+        spread = extractNumeric(value);
+        color = activeStyles.boxShadowColor || "#000000";
+      } else if (property === "boxShadowColor") {
+        x = extractNumeric(activeStyles.boxShadowX);
+        y = extractNumeric(activeStyles.boxShadowY);
+        blur = extractNumeric(activeStyles.boxShadowBlur);
+        spread = extractNumeric(activeStyles.boxShadowSpread);
+        color = value || "#000000";
+      }
+
+      const boxShadowValue = `${x}px ${y}px ${blur}px ${spread}px ${color}`;
+      component.addStyle({ "box-shadow": boxShadowValue });
+      
+      // Обновляем состояние с правильными значениями (с единицами для отображения)
+      if (currentStyles) {
+        setStyles(prev => ({
+          ...prev,
+          boxShadow: boxShadowValue,
+          boxShadowX: `${x}px`,
+          boxShadowY: `${y}px`,
+          boxShadowBlur: `${blur}px`,
+          boxShadowSpread: `${spread}px`,
+          boxShadowColor: color,
+        }));
+      }
+      
+      editor.trigger("component:update", component);
+      return;
+    }
+
     const cssProperty = property.replace(/([A-Z])/g, "-$1").toLowerCase();
 
-    if (value === "") {
+    // Свойства, которые требуют единицы измерения (если значение - просто число)
+    const propertiesRequiringUnits = [
+      "width", "height", "min-height", "max-width", "max-height",
+      "font-size", "line-height",
+      "margin-top", "margin-right", "margin-bottom", "margin-left",
+      "padding-top", "padding-right", "padding-bottom", "padding-left",
+      "border-width", "border-radius",
+      "top", "right", "bottom", "left"
+    ];
+
+    let finalValue = value;
+
+    // Если значение - просто число (без единиц) и свойство требует единицы
+    if (value && value.trim() !== "" && propertiesRequiringUnits.includes(cssProperty)) {
+      const numericValue = value.replace(/[^0-9.\-]/g, "");
+      if (numericValue && !isNaN(parseFloat(numericValue))) {
+        // Проверяем, есть ли уже единицы в исходном значении
+        const hasUnit = /(px|em|rem|%|vh|vw|pt|cm|mm|in)$/i.test(value);
+        if (!hasUnit) {
+          // Определяем единицу по умолчанию для свойства
+          let defaultUnit = "px";
+          if (cssProperty === "font-size" || cssProperty === "line-height") {
+            defaultUnit = "px"; // можно использовать em/rem, но по умолчанию px
+          }
+          finalValue = `${numericValue}${defaultUnit}`;
+        }
+      }
+    }
+
+    if (finalValue === "" || finalValue.trim() === "") {
       component.removeStyle(cssProperty);
     } else {
-      component.addStyle({ [cssProperty]: value });
+      component.addStyle({ [cssProperty]: finalValue });
       
       // Если изменяем border-width, убеждаемся, что border-style установлен
-      if (cssProperty === "border-width" && value) {
+      if (cssProperty === "border-width" && finalValue) {
         const currentBorderStyle = component.getStyle()["border-style"];
         if (!currentBorderStyle || currentBorderStyle === "none") {
-          component.addStyle({ "border-style": styles.borderStyle || "solid" });
+          component.addStyle({ "border-style": activeStyles.borderStyle || "solid" });
         }
       }
     }
@@ -413,11 +553,15 @@ export function StylePanel({ editor }: StylePanelProps) {
   };
 
   const handleChange = (property: StyleKey, value: string) => {
-    setStyles((prev) => ({
-      ...prev,
-      [property]: value,
-    }));
-    applyStyle(property, value);
+    setStyles((prev) => {
+      const newStyles = {
+        ...prev,
+        [property]: value,
+      };
+      // Применяем стиль с новыми значениями
+      applyStyle(property, value, newStyles);
+      return newStyles;
+    });
   };
 
   const toggleSection = (id: string) => {
@@ -652,6 +796,216 @@ export function StylePanel({ editor }: StylePanelProps) {
               sliderMax={100}
               sliderStep={1}
             />
+          </div>
+        )}
+      </div>
+
+      {/* Тени */}
+      <div className="styles-section">
+        <SectionHeader
+          id="shadows"
+          title="Тени"
+          expanded={expandedSections.shadows}
+          onToggle={toggleSection}
+        />
+        {expandedSections.shadows && (
+          <div className="styles-section-body">
+            <div className="styles-field">
+              <label>Тень элемента (Box Shadow)</label>
+              <div className="styles-shadow-controls">
+                <InputWithUnit
+                  label="Смещение X"
+                  value={styles.boxShadowX.replace(/[^0-9.\-]/g, "")}
+                  property="boxShadowX"
+                  units={["px"]}
+                  onChange={handleChange}
+                  showSlider={true}
+                  sliderMin={-50}
+                  sliderMax={50}
+                  sliderStep={1}
+                />
+                <InputWithUnit
+                  label="Смещение Y"
+                  value={styles.boxShadowY.replace(/[^0-9.\-]/g, "")}
+                  property="boxShadowY"
+                  units={["px"]}
+                  onChange={handleChange}
+                  showSlider={true}
+                  sliderMin={-50}
+                  sliderMax={50}
+                  sliderStep={1}
+                />
+                <InputWithUnit
+                  label="Размытие"
+                  value={styles.boxShadowBlur.replace(/[^0-9.\-]/g, "")}
+                  property="boxShadowBlur"
+                  units={["px"]}
+                  onChange={handleChange}
+                  showSlider={true}
+                  sliderMin={0}
+                  sliderMax={100}
+                  sliderStep={1}
+                />
+                <InputWithUnit
+                  label="Растяжение"
+                  value={styles.boxShadowSpread.replace(/[^0-9.\-]/g, "")}
+                  property="boxShadowSpread"
+                  units={["px"]}
+                  onChange={handleChange}
+                  showSlider={true}
+                  sliderMin={-50}
+                  sliderMax={50}
+                  sliderStep={1}
+                />
+                <ColorInput
+                  label="Цвет тени"
+                  value={styles.boxShadowColor}
+                  property="boxShadowColor"
+                  onChange={handleChange}
+                />
+                <div className="styles-field">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const component = selectedComponentRef.current;
+                      if (component && editor) {
+                        component.removeStyle("box-shadow");
+                        setStyles(prev => ({
+                          ...prev,
+                          boxShadow: "",
+                          boxShadowX: "0px",
+                          boxShadowY: "0px",
+                          boxShadowBlur: "0px",
+                          boxShadowSpread: "0px",
+                          boxShadowColor: "#000000",
+                        }));
+                        editor.trigger("component:update", component);
+                      }
+                    }}
+                    className="styles-remove-button"
+                  >
+                    Убрать тень
+                  </button>
+                </div>
+              </div>
+            </div>
+            <div className="styles-field">
+              <label>Тень текста (Text Shadow)</label>
+              <input
+                type="text"
+                value={styles.textShadow}
+                onChange={(e) => handleChange("textShadow", e.target.value)}
+                placeholder="0px 2px 4px rgba(0,0,0,0.3)"
+                className="styles-text-input"
+              />
+              <div className="styles-field">
+                <button
+                  type="button"
+                  onClick={() => {
+                    const component = selectedComponentRef.current;
+                    if (component && editor) {
+                      component.removeStyle("text-shadow");
+                      setStyles(prev => ({ ...prev, textShadow: "" }));
+                      editor.trigger("component:update", component);
+                    }
+                  }}
+                  className="styles-remove-button"
+                >
+                  Убрать тень текста
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Эффекты */}
+      <div className="styles-section">
+        <SectionHeader
+          id="effects"
+          title="Эффекты"
+          expanded={expandedSections.effects}
+          onToggle={toggleSection}
+        />
+        {expandedSections.effects && (
+          <div className="styles-section-body">
+            <div className="styles-field">
+              <label>Прозрачность</label>
+              <div className="styles-slider-group">
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.01"
+                  value={parseFloat(styles.opacity) || 1}
+                  onChange={(e) => handleChange("opacity", e.target.value)}
+                  className="styles-slider"
+                />
+                <span className="styles-slider-value">
+                  {((parseFloat(styles.opacity) || 1) * 100).toFixed(0)}%
+                </span>
+              </div>
+              <input
+                type="text"
+                value={styles.opacity}
+                onChange={(e) => handleChange("opacity", e.target.value)}
+                placeholder="1"
+                className="styles-text-input"
+              />
+            </div>
+            <div className="styles-field">
+              <label>Трансформация</label>
+              <input
+                type="text"
+                value={styles.transform}
+                onChange={(e) => handleChange("transform", e.target.value)}
+                placeholder="rotate(45deg) scale(1.2)"
+                className="styles-text-input"
+              />
+              <div className="styles-field" style={{ marginTop: "8px" }}>
+                <div className="styles-align-buttons">
+                  <button
+                    type="button"
+                    onClick={() => handleChange("transform", "rotate(5deg)")}
+                    className="styles-align-btn"
+                    title="Поворот 5°"
+                  >
+                    ↻ 5°
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange("transform", "scale(1.1)")}
+                    className="styles-align-btn"
+                    title="Увеличить 10%"
+                  >
+                    ⬍ 1.1x
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleChange("transform", "scale(0.9)")}
+                    className="styles-align-btn"
+                    title="Уменьшить 10%"
+                  >
+                    ⬌ 0.9x
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const component = selectedComponentRef.current;
+                      if (component && editor) {
+                        component.removeStyle("transform");
+                        setStyles(prev => ({ ...prev, transform: "" }));
+                        editor.trigger("component:update", component);
+                      }
+                    }}
+                    className="styles-align-btn"
+                    title="Сбросить"
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         )}
       </div>

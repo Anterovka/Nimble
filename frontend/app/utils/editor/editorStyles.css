@@ -3,7 +3,6 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
 }
 
 .card {
@@ -452,7 +451,6 @@
   flex: 1;
   overflow-y: auto;
   overflow-x: hidden;
-  scroll-behavior: smooth;
   -webkit-overflow-scrolling: touch;
 }
 
@@ -1041,7 +1039,6 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   background: rgba(0, 0, 0, 0.164);
   border: 1px solid rgba(148, 163, 184, 0.25);
   border-radius: 14px;
@@ -1198,7 +1195,6 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   background: rgba(0, 0, 0, 0.164);
   border: 1px solid rgba(148, 163, 184, 0.22);
   border-radius: 16px;
@@ -1454,6 +1450,47 @@
 
 .styles-color-text {
   flex: 1;
+}
+
+.styles-shadow-controls {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.styles-text-input {
+  width: 100%;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+  padding: 6px 10px;
+  color: white;
+  font-size: 12px;
+}
+
+.styles-text-input:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.styles-remove-button {
+  width: 100%;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.1);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 4px;
+  color: rgba(239, 68, 68, 0.9);
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.styles-remove-button:hover {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: rgba(239, 68, 68, 1);
 }
 
 .styles-align-buttons {
@@ -2394,7 +2431,6 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   pointer-events: auto;
   will-change: scroll-position;
 }
@@ -2407,7 +2443,6 @@
   overflow-x: hidden;
   overscroll-behavior: contain;
   -webkit-overflow-scrolling: touch;
-  scroll-behavior: smooth;
   background: #050505;
 }
 
@@ -2741,7 +2776,6 @@
   .html-structure-wrapper,
   .styles-container {
     -webkit-overflow-scrolling: touch;
-    scroll-behavior: smooth;
   }
 
   .gjs-block.selected-mobile {

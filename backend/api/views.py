@@ -8,10 +8,12 @@ from rest_framework.permissions import AllowAny, IsAuthenticated, IsAuthenticate
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.views import TokenObtainPairView
 from django.shortcuts import get_object_or_404
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, FileResponse, Http404
 from django.contrib.auth.models import User
 from django.core.exceptions import ValidationError
 from django.utils import timezone
+from django.views.decorators.http import require_http_methods
+from pathlib import Path
 from .models import Project, Subscription, CustomBlock
 from .serializers import (
     ProjectSerializer,
@@ -400,17 +402,14 @@ def subscription_view(request):
 @permission_classes([IsAuthenticated])
 def deploy_view(request):
     """
-    Деплой сайта на VPS через SSH
+    Деплой сайта на VPS (свой сервер или сервер конструктора)
     
     Принимает:
+    - deploy_type: 'vps' или 'builder_vps'
     - site_zip: ZIP архив с index.html
-    - host: IP или домен VPS
-    - port: SSH порт (по умолчанию 22)
-    - username: SSH пользователь
-    - password: SSH пароль
-    - deploy_path: Путь на VPS
-    - domain: Домен (опционально)
-    - nginx_config: Нужен ли Nginx конфиг (опционально)
+    - Для VPS (свой сервер): host, port, username, password, deploy_path, domain, email, nginx_config, enable_ssl
+    - Для builder_vps: параметры берутся из настроек VPS сервера в админке
+    - project_id: ID проекта (опционально)
     
     Возвращает:
     - success: bool
@@ -431,6 +430,7 @@ def deploy_view(request):
         )
     
     validated_data = serializer.validated_data
+    deploy_type = validated_data.get('deploy_type', 'vps')
     
     temp_files = []
     ssh_client = None
@@ -444,120 +444,241 @@ def deploy_view(request):
             temp_zip.write(chunk)
         temp_zip.close()
         
-        from .deploy_utils import (
-            create_ssh_client,
-            deploy_files,
-            deploy_nginx_config,
-            obtain_ssl_certificate
-        )
-        
-        ssh_client = create_ssh_client(
-            host=validated_data['host'],
-            port=validated_data.get('port', 22),
-            username=validated_data['username'],
-            password=validated_data['password'],
-            timeout=10
-        )
-        
-        success, message = deploy_files(
-            ssh=ssh_client,
-            zip_path=temp_zip.name,
-            deploy_path=validated_data['deploy_path'],
-            username=validated_data['username'],
-            timeout=30
-        )
-        
-        if not success:
-            return Response(
-                {'success': False, 'message': message},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
-        
-        ssl_success = True
-        ssl_message = ""
-        enable_ssl = validated_data.get('enable_ssl', False)
-        if enable_ssl:
-            domain_for_ssl = validated_data.get('domain')
-            email = validated_data.get('email')
-            if domain_for_ssl and email:
-                ssl_success, ssl_message = obtain_ssl_certificate(
-                    ssh=ssh_client,
-                    domain=domain_for_ssl,
-                    email=email,
-                    timeout=120
-                )
-        
-        nginx_success = True
-        nginx_message = ""
-        if validated_data.get('nginx_config', False):
-            domain = validated_data.get('domain') or validated_data['host']
-            use_ssl = enable_ssl and ssl_success
-            nginx_success, nginx_message = deploy_nginx_config(
-                ssh=ssh_client,
-                domain=domain,
-                deploy_path=validated_data['deploy_path'],
-                username=validated_data['username'],
-                use_ssl=use_ssl,
-                timeout=30
-            )
-        
-        domain = validated_data.get('domain')
-        protocol = 'https' if (enable_ssl and ssl_success) else 'http'
-        if domain:
-            url = f"{protocol}://{domain}"
-        else:
-            url = f"{protocol}://{validated_data['host']}"
-        
-        final_message = message
-        
-        if enable_ssl:
-            if ssl_success:
-                final_message += f"\n\n✅ {ssl_message}"
-            else:
-                final_message += f"\n\n⚠️ SSL сертификат не получен: {ssl_message}"
-        
-        if not validated_data.get('nginx_config', False):
-            final_message += f"\n\n⚠️ Внимание: Nginx не настроен. Файлы загружены в {validated_data['deploy_path']}, но сайт не будет доступен без веб-сервера.\n\nДля запуска сайта:\n1. Настройте Nginx или другой веб-сервер\n2. Или используйте простой HTTP-сервер: cd {validated_data['deploy_path']} && python3 -m http.server 8000"
-        elif not nginx_success:
-            final_message += f"\n\n⚠️ Nginx конфиг создан, но не применён: {nginx_message}\n\nПроверьте:\n1. Запущен ли Nginx: sudo systemctl status nginx\n2. Проверьте конфиг: sudo nginx -t\n3. Перезагрузите Nginx: sudo systemctl reload nginx\n4. Проверьте логи: sudo tail -f /var/log/nginx/error.log"
-        else:
-            final_message += f"\n\n✅ Nginx настроен и перезагружен. Сайт должен быть доступен по адресу: {url}\n\nЕсли сайт не открывается, проверьте:\n1. Открыт ли порт 80 (или 443 для HTTPS) в firewall\n2. Правильно ли указан домен/IP в Nginx конфиге\n3. Логи Nginx: sudo tail -f /var/log/nginx/error.log"
-        
         project_id = validated_data.get('project_id')
+        project = None
         if project_id:
             try:
                 project = Project.objects.get(id=project_id, user=request.user)
+            except Project.DoesNotExist:
+                pass
+        
+        elif deploy_type == 'builder_vps':
+            # Деплой на VPS сервер конструктора (настройки из админки)
+            from .models import VPSServer
+            from .deploy_utils import (
+                create_ssh_client,
+                deploy_files,
+                deploy_nginx_config,
+                obtain_ssl_certificate
+            )
+            
+            # Получаем VPS сервер (по умолчанию или первый активный)
+            vps_server = VPSServer.objects.filter(is_active=True).order_by('-is_default', 'id').first()
+            
+            if not vps_server:
+                return Response(
+                    {'success': False, 'message': 'Не найден активный VPS сервер в настройках. Настройте сервер в админ-панели.'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+            
+            # Генерируем путь для деплоя на основе проекта
+            if project:
+                deploy_path = f"{vps_server.deploy_path}/{project.slug or f'project-{project.id}'}"
+            else:
+                deploy_path = f"{vps_server.deploy_path}/project-{request.user.id}-{int(timezone.now().timestamp())}"
+            
+            # Подключаемся к серверу
+            ssh_client = create_ssh_client(
+                host=vps_server.host,
+                port=vps_server.port,
+                username=vps_server.username,
+                password=vps_server.password,
+                timeout=10
+            )
+            
+            # Деплоим файлы
+            success, message = deploy_files(
+                ssh=ssh_client,
+                zip_path=temp_zip.name,
+                deploy_path=deploy_path,
+                username=vps_server.username,
+                timeout=30
+            )
+            
+            if not success:
+                ssh_client.close()
+                return Response(
+                    {'success': False, 'message': message},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Настраиваем SSL если нужно
+            ssl_success = True
+            ssl_message = ""
+            enable_ssl = vps_server.ssl_enabled
+            if enable_ssl and vps_server.domain and vps_server.email:
+                ssl_success, ssl_message = obtain_ssl_certificate(
+                    ssh=ssh_client,
+                    domain=vps_server.domain,
+                    email=vps_server.email,
+                    timeout=120
+                )
+            
+            # Настраиваем Nginx если нужно
+            nginx_success = True
+            nginx_message = ""
+            if vps_server.nginx_config_enabled:
+                domain = vps_server.domain or vps_server.host
+                use_ssl = enable_ssl and ssl_success
+                nginx_success, nginx_message = deploy_nginx_config(
+                    ssh=ssh_client,
+                    domain=domain,
+                    deploy_path=deploy_path,
+                    username=vps_server.username,
+                    use_ssl=use_ssl,
+                    timeout=30
+                )
+            
+            # Генерируем URL
+            protocol = 'https' if (enable_ssl and ssl_success) else 'http'
+            if vps_server.domain:
+                url = f"{protocol}://{vps_server.domain}"
+            else:
+                url = f"{protocol}://{vps_server.host}"
+            
+            ssh_client.close()
+            
+            # Сохраняем информацию в проекте
+            if project:
+                project.deploy_type = 'builder_vps'
                 project.deployed_url = url
                 project.deployed_at = timezone.now()
-                project.save(update_fields=['deployed_url', 'deployed_at'])
-                print(f"✅ Информация о деплое сохранена для проекта {project_id}: {url}")
-            except Project.DoesNotExist:
-                print(f"⚠️ Проект {project_id} не найден для пользователя {request.user.username}")
-            except Exception as e:
-                print(f"❌ Ошибка при сохранении информации о деплое: {str(e)}")
+                project.save(update_fields=['deploy_type', 'deployed_url', 'deployed_at'])
+                print(f"✅ Проект {project_id} задеплоен на VPS сервер конструктора: {url}")
+            
+            final_message = f"✅ Сайт успешно задеплоен на VPS сервер конструктора ({vps_server.name})"
+            if nginx_success:
+                final_message += f"\n\n✅ Nginx настроен. Сайт доступен по адресу: {url}"
+            else:
+                final_message += f"\n\n⚠️ {nginx_message}"
+            
+            response_data = {
+                'success': True,
+                'message': final_message,
+                'url': url,
+                'deploy_type': 'builder_vps',
+                'vps_server': vps_server.name
+            }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
+        
         else:
-            print("⚠️ project_id не указан, информация о деплое не будет сохранена")
-        
-        response_data = {
-            'success': True,
-            'message': final_message,
-            'url': url,
-            'deploy_path': validated_data['deploy_path']
-        }
-        
-        if enable_ssl:
-            response_data['ssl'] = {
-                'success': ssl_success,
-                'message': ssl_message
+            # Деплой на VPS (существующая логика)
+            from .deploy_utils import (
+                create_ssh_client,
+                deploy_files,
+                deploy_nginx_config,
+                obtain_ssl_certificate
+            )
+            
+            ssh_client = create_ssh_client(
+                host=validated_data['host'],
+                port=validated_data.get('port', 22),
+                username=validated_data['username'],
+                password=validated_data['password'],
+                timeout=10
+            )
+            
+            success, message = deploy_files(
+                ssh=ssh_client,
+                zip_path=temp_zip.name,
+                deploy_path=validated_data['deploy_path'],
+                username=validated_data['username'],
+                timeout=30
+            )
+            
+            if not success:
+                return Response(
+                    {'success': False, 'message': message},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            ssl_success = True
+            ssl_message = ""
+            enable_ssl = validated_data.get('enable_ssl', False)
+            if enable_ssl:
+                domain_for_ssl = validated_data.get('domain')
+                email = validated_data.get('email')
+                if domain_for_ssl and email:
+                    ssl_success, ssl_message = obtain_ssl_certificate(
+                        ssh=ssh_client,
+                        domain=domain_for_ssl,
+                        email=email,
+                        timeout=120
+                    )
+            
+            nginx_success = True
+            nginx_message = ""
+            if validated_data.get('nginx_config', False):
+                domain = validated_data.get('domain') or validated_data['host']
+                use_ssl = enable_ssl and ssl_success
+                nginx_success, nginx_message = deploy_nginx_config(
+                    ssh=ssh_client,
+                    domain=domain,
+                    deploy_path=validated_data['deploy_path'],
+                    username=validated_data['username'],
+                    use_ssl=use_ssl,
+                    timeout=30
+                )
+            
+            domain = validated_data.get('domain')
+            protocol = 'https' if (enable_ssl and ssl_success) else 'http'
+            if domain:
+                url = f"{protocol}://{domain}"
+            else:
+                url = f"{protocol}://{validated_data['host']}"
+            
+            final_message = message
+            
+            if enable_ssl:
+                if ssl_success:
+                    final_message += f"\n\n✅ {ssl_message}"
+                else:
+                    final_message += f"\n\n⚠️ SSL сертификат не получен: {ssl_message}"
+            
+            if not validated_data.get('nginx_config', False):
+                final_message += f"\n\n⚠️ Внимание: Nginx не настроен. Файлы загружены в {validated_data['deploy_path']}, но сайт не будет доступен без веб-сервера.\n\nДля запуска сайта:\n1. Настройте Nginx или другой веб-сервер\n2. Или используйте простой HTTP-сервер: cd {validated_data['deploy_path']} && python3 -m http.server 8000"
+            elif not nginx_success:
+                final_message += f"\n\n⚠️ Nginx конфиг создан, но не применён: {nginx_message}\n\nПроверьте:\n1. Запущен ли Nginx: sudo systemctl status nginx\n2. Проверьте конфиг: sudo nginx -t\n3. Перезагрузите Nginx: sudo systemctl reload nginx\n4. Проверьте логи: sudo tail -f /var/log/nginx/error.log"
+            else:
+                final_message += f"\n\n✅ Nginx настроен и перезагружен. Сайт должен быть доступен по адресу: {url}\n\nЕсли сайт не открывается, проверьте:\n1. Открыт ли порт 80 (или 443 для HTTPS) в firewall\n2. Правильно ли указан домен/IP в Nginx конфиге\n3. Логи Nginx: sudo tail -f /var/log/nginx/error.log"
+            
+            if project_id:
+                try:
+                    project = Project.objects.get(id=project_id, user=request.user)
+                    project.deploy_type = 'vps'
+                    project.deployed_url = url
+                    project.deployed_at = timezone.now()
+                    project.save(update_fields=['deploy_type', 'deployed_url', 'deployed_at'])
+                    print(f"✅ Информация о деплое сохранена для проекта {project_id}: {url}")
+                except Project.DoesNotExist:
+                    print(f"⚠️ Проект {project_id} не найден для пользователя {request.user.username}")
+                except Exception as e:
+                    print(f"❌ Ошибка при сохранении информации о деплое: {str(e)}")
+            else:
+                print("⚠️ project_id не указан, информация о деплое не будет сохранена")
+            
+            response_data = {
+                'success': True,
+                'message': final_message,
+                'url': url,
+                'deploy_path': validated_data['deploy_path'],
+                'deploy_type': 'vps'
             }
-        
-        if validated_data.get('nginx_config', False):
-            response_data['nginx'] = {
-                'success': nginx_success,
-                'message': nginx_message
-            }
-        
-        return Response(response_data, status=status.HTTP_200_OK)
+            
+            if enable_ssl:
+                response_data['ssl'] = {
+                    'success': ssl_success,
+                    'message': ssl_message
+                }
+            
+            if validated_data.get('nginx_config', False):
+                response_data['nginx'] = {
+                    'success': nginx_success,
+                    'message': nginx_message
+                }
+            
+            return Response(response_data, status=status.HTTP_200_OK)
         
     except ValidationError as e:
         return Response(
@@ -584,6 +705,65 @@ def deploy_view(request):
                     os.unlink(temp_file)
             except:
                 pass
+
+
+@require_http_methods(["GET"])
+def serve_deployed_site(request, subdomain: str, path: str = ""):
+    """
+    Обслуживает статические файлы задеплоенного сайта
+    
+    Args:
+        subdomain: Поддомен проекта
+        path: Путь к файлу (например, index.html, styles.css, images/photo.jpg)
+    
+    Returns:
+        FileResponse с содержимым файла или 404
+    """
+    from django.conf import settings
+    from .subdomain_utils import get_deploy_path
+    
+    try:
+        deploy_path = get_deploy_path(subdomain)
+        
+        # Если path пустой, используем index.html
+        if not path or path == "":
+            file_path = deploy_path / "index.html"
+        else:
+            file_path = deploy_path / path
+        
+        # Проверяем безопасность пути (защита от path traversal)
+        try:
+            file_path.resolve().relative_to(deploy_path.resolve())
+        except ValueError:
+            raise Http404("Недопустимый путь")
+        
+        if not file_path.exists() or not file_path.is_file():
+            raise Http404("Файл не найден")
+        
+        # Определяем MIME тип
+        content_type = "text/html"
+        if file_path.suffix == ".css":
+            content_type = "text/css"
+        elif file_path.suffix in [".jpg", ".jpeg"]:
+            content_type = "image/jpeg"
+        elif file_path.suffix == ".png":
+            content_type = "image/png"
+        elif file_path.suffix == ".gif":
+            content_type = "image/gif"
+        elif file_path.suffix == ".svg":
+            content_type = "image/svg+xml"
+        elif file_path.suffix == ".ico":
+            content_type = "image/x-icon"
+        elif file_path.suffix == ".js":
+            content_type = "application/javascript"
+        
+        file_handle = open(file_path, "rb")
+        response = FileResponse(file_handle, content_type=content_type)
+        response['Content-Length'] = file_path.stat().st_size
+        return response
+        
+    except Exception as e:
+        raise Http404(f"Ошибка при загрузке файла: {str(e)}")
 
 
 class CustomBlockViewSet(viewsets.ModelViewSet):

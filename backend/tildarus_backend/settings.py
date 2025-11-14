@@ -134,6 +134,11 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 MEDIA_URL = 'media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
+# Настройки для деплоя на поддомены
+DEPLOY_BASE_DOMAIN = os.getenv('DEPLOY_BASE_DOMAIN', 'localhost:8000')  # Базовый домен для поддоменов
+DEPLOY_STATIC_ROOT = BASE_DIR / 'deployed_sites'  # Директория для хранения задеплоенных сайтов
+DEPLOY_STATIC_URL = '/deployed/'  # URL префикс для доступа к задеплоенным сайтам
+
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.0/ref/settings/#default-auto-field
 

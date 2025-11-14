@@ -27,8 +27,10 @@ class ProjectSerializer(serializers.ModelSerializer):
             'is_published',
             'is_public',
             'views_count',
+            'deploy_type',
             'deployed_url',
             'deployed_at',
+            'subdomain',
             'created_at',
             'updated_at',
             'published_at',
@@ -59,8 +61,10 @@ class ProjectListSerializer(serializers.ModelSerializer):
             'is_published',
             'is_public',
             'views_count',
+            'deploy_type',
             'deployed_url',
             'deployed_at',
+            'subdomain',
             'created_at',
             'updated_at',
         ]
@@ -175,12 +179,18 @@ class SubscriptionSerializer(serializers.ModelSerializer):
 
 class DeploySerializer(serializers.Serializer):
     """Сериализатор для деплоя на VPS"""
+    deploy_type = serializers.ChoiceField(
+        choices=[('vps', 'VPS (свой сервер)'), ('builder_vps', 'VPS сервер конструктора')],
+        default='vps',
+        help_text="Тип деплоя"
+    )
     site_zip = serializers.FileField(required=True, help_text="ZIP архив с index.html")
-    host = serializers.CharField(required=True, max_length=255, help_text="IP адрес или домен VPS")
+    # Поля для VPS деплоя
+    host = serializers.CharField(required=False, max_length=255, help_text="IP адрес или домен VPS")
     port = serializers.IntegerField(required=False, default=22, min_value=1, max_value=65535, help_text="SSH порт")
-    username = serializers.CharField(required=True, max_length=100, help_text="SSH пользователь (не root)")
-    password = serializers.CharField(required=True, write_only=True, help_text="SSH пароль")
-    deploy_path = serializers.CharField(required=True, max_length=500, help_text="Путь на VPS (например: /var/www/my-site)")
+    username = serializers.CharField(required=False, max_length=100, help_text="SSH пользователь (не root)")
+    password = serializers.CharField(required=False, write_only=True, help_text="SSH пароль")
+    deploy_path = serializers.CharField(required=False, max_length=500, help_text="Путь на VPS (например: /var/www/my-site)")
     domain = serializers.CharField(required=False, max_length=255, allow_blank=True, help_text="Домен для Nginx конфига")
     email = serializers.EmailField(required=False, allow_blank=True, help_text="Email для Let's Encrypt SSL сертификата")
     nginx_config = serializers.BooleanField(required=False, default=False, help_text="Нужен ли Nginx конфиг")
@@ -222,19 +232,36 @@ class DeploySerializer(serializers.Serializer):
     
     def validate(self, attrs):
         """Валидация зависимостей между полями"""
-        enable_ssl = attrs.get('enable_ssl', False)
-        email = attrs.get('email', '')
-        domain = attrs.get('domain', '')
+        deploy_type = attrs.get('deploy_type', 'vps')
         
-        if enable_ssl:
-            if not email or not email.strip():
-                raise serializers.ValidationError({
-                    'email': 'Email обязателен для получения SSL сертификата'
-                })
-            if not domain or not domain.strip():
-                raise serializers.ValidationError({
-                    'domain': 'Домен обязателен для получения SSL сертификата'
-                })
+        if deploy_type == 'vps':
+            # Валидация для VPS деплоя
+            if not attrs.get('host'):
+                raise serializers.ValidationError({'host': 'Host обязателен для VPS деплоя'})
+            if not attrs.get('username'):
+                raise serializers.ValidationError({'username': 'Username обязателен для VPS деплоя'})
+            if not attrs.get('password'):
+                raise serializers.ValidationError({'password': 'Password обязателен для VPS деплоя'})
+            if not attrs.get('deploy_path'):
+                raise serializers.ValidationError({'deploy_path': 'Deploy path обязателен для VPS деплоя'})
+            
+            enable_ssl = attrs.get('enable_ssl', False)
+            email = attrs.get('email', '')
+            domain = attrs.get('domain', '')
+            
+            if enable_ssl:
+                if not email or not email.strip():
+                    raise serializers.ValidationError({
+                        'email': 'Email обязателен для получения SSL сертификата'
+                    })
+                if not domain or not domain.strip():
+                    raise serializers.ValidationError({
+                        'domain': 'Домен обязателен для получения SSL сертификата'
+                    })
+        elif deploy_type == 'builder_vps':
+            # Для деплоя на VPS сервер конструктора параметры не нужны
+            # Они берутся из настроек в админке
+            pass
         
         return attrs
 

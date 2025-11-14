@@ -31,7 +31,7 @@ export const musicLabelTemplate: Template = {
       <div style="max-width: 1400px; margin: 0 auto;">
         <h3 style="text-align: center; font-size: 3.5rem; font-weight: 900; margin-bottom: 4rem;">Новые релизы</h3>
         <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 2rem;">
-          <div style="background: #1a1a1a; border: 1px solid #222; border-radius: 20px; overflow: hidden; cursor: pointer; transition: transform 0.3s;">
+          <div style="background: #1a1a1a; border: 1px solid #222; border-radius: 20px; overflow: hidden; cursor: pointer;">
             <div style="height: 300px; background: url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=800') center/cover; position: relative;">
               <div style="position: absolute; bottom: 1rem; right: 1rem; width: 60px; height: 60px; background: rgba(255,255,255,0.9); border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.5rem; cursor: pointer;">▶</div>
             </div>
@@ -136,9 +136,9 @@ export const musicLabelTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-button:hover { transform: translateY(-2px); transition: transform 0.2s; box-shadow: 0 10px 40px rgba(255, 0, 110, 0.6) !important; }
-div[style*="cursor: pointer"]:hover { transform: translateY(-5px); transition: transform 0.3s; border-color: #ff006e !important; }
-a:hover { color: #ff006e !important; transition: color 0.2s; }
+button:hover { box-shadow: 0 10px 40px rgba(255, 0, 110, 0.6) !important; }
+div[style*="cursor: pointer"]:hover { border-color: #ff006e !important; }
+a:hover { color: #ff006e !important; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 3rem !important; line-height: 1.1 !important; }

@@ -77,8 +77,19 @@ class Project(models.Model):
     views_count = models.IntegerField(default=0, verbose_name="Количество просмотров")
     
     # Деплой
+    DEPLOY_TYPES = [
+        ('vps', 'VPS (свой сервер)'),
+        ('builder_vps', 'VPS сервер конструктора'),
+    ]
+    deploy_type = models.CharField(
+        max_length=20,
+        choices=DEPLOY_TYPES,
+        default='vps',
+        verbose_name="Тип деплоя"
+    )
     deployed_url = models.URLField(max_length=500, blank=True, null=True, verbose_name="URL деплоя")
     deployed_at = models.DateTimeField(null=True, blank=True, verbose_name="Задеплоен")
+    subdomain = models.SlugField(max_length=100, blank=True, null=True, verbose_name="Поддомен")
     
     created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
     updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлен")
@@ -169,4 +180,77 @@ class CustomBlock(models.Model):
             raise ValidationError("ID блока обязателен")
         if not self.content:
             raise ValidationError("Содержимое блока обязательно")
+
+
+class VPSServer(models.Model):
+    """Модель настроек VPS сервера для деплоя"""
+    name = models.CharField(max_length=255, verbose_name="Название сервера")
+    host = models.CharField(max_length=255, verbose_name="IP адрес или домен")
+    port = models.IntegerField(default=22, verbose_name="SSH порт")
+    username = models.CharField(max_length=100, verbose_name="SSH пользователь")
+    password = models.CharField(max_length=255, verbose_name="SSH пароль")
+    deploy_path = models.CharField(
+        max_length=500,
+        default="/var/www/deployed",
+        verbose_name="Базовый путь для деплоя"
+    )
+    domain = models.CharField(
+        max_length=255,
+        blank=True,
+        null=True,
+        verbose_name="Домен (для поддоменов)"
+    )
+    email = models.EmailField(
+        blank=True,
+        null=True,
+        verbose_name="Email для SSL сертификатов"
+    )
+    is_active = models.BooleanField(default=True, verbose_name="Активен")
+    is_default = models.BooleanField(
+        default=False,
+        verbose_name="Сервер по умолчанию для поддоменов"
+    )
+    nginx_config_enabled = models.BooleanField(
+        default=True,
+        verbose_name="Автоматически настраивать Nginx"
+    )
+    ssl_enabled = models.BooleanField(
+        default=False,
+        verbose_name="Использовать SSL по умолчанию"
+    )
+    notes = models.TextField(blank=True, null=True, verbose_name="Заметки")
+    
+    created_at = models.DateTimeField(auto_now_add=True, verbose_name="Создан")
+    updated_at = models.DateTimeField(auto_now=True, verbose_name="Обновлен")
+    
+    class Meta:
+        verbose_name = "VPS сервер"
+        verbose_name_plural = "VPS серверы"
+        ordering = ['-is_default', 'name']
+        indexes = [
+            models.Index(fields=['is_active', 'is_default']),
+        ]
+    
+    def __str__(self) -> str:
+        return f"{self.name} ({self.host})"
+    
+    def clean(self):
+        """Валидация данных сервера"""
+        if not self.host:
+            raise ValidationError("Host обязателен")
+        if not self.username:
+            raise ValidationError("Username обязателен")
+        if not self.password:
+            raise ValidationError("Password обязателен")
+        if self.port < 1 or self.port > 65535:
+            raise ValidationError("Порт должен быть от 1 до 65535")
+        
+        # Если это сервер по умолчанию, снимаем флаг с других
+        if self.is_default:
+            VPSServer.objects.filter(is_default=True).exclude(pk=self.pk).update(is_default=False)
+    
+    def save(self, *args, **kwargs):
+        """Переопределяем save для валидации"""
+        self.clean()
+        super().save(*args, **kwargs)
 

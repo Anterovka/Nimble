@@ -16,6 +16,7 @@ interface DeployModalProps {
 export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalProps) {
   const { user } = useAuth();
   const contentRef = useRef<HTMLDivElement>(null);
+  const [deployType, setDeployType] = useState<"vps" | "builder_vps">("vps");
   const [host, setHost] = useState("");
   const [port, setPort] = useState("22");
   const [username, setUsername] = useState("");
@@ -275,9 +276,11 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
   }, [isOpen]);
 
   const handleDeploy = async () => {
-    if (!host || !username || !password || !deployPath) {
-      setError("Заполните все обязательные поля");
-      return;
+    if (deployType === "vps") {
+      if (!host || !username || !password || !deployPath) {
+        setError("Заполните все обязательные поля");
+        return;
+      }
     }
 
     setLoading(true);
@@ -288,15 +291,16 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
       const result = await deployToVPS(
         editor,
         {
-          host,
-          port: port ? parseInt(port) : undefined,
-          username,
-          password,
-          deployPath,
-          domain: domain || undefined,
-          email: enableSSL ? email : undefined,
-          nginxConfig,
-          enableSSL: enableSSL && !!email,
+          deployType,
+          host: deployType === "vps" ? host : undefined,
+          port: deployType === "vps" && port ? parseInt(port) : undefined,
+          username: deployType === "vps" ? username : undefined,
+          password: deployType === "vps" ? password : undefined,
+          deployPath: deployType === "vps" ? deployPath : undefined,
+          domain: deployType === "vps" ? (domain || undefined) : undefined,
+          email: deployType === "vps" && enableSSL ? email : undefined,
+          nginxConfig: deployType === "vps" ? nginxConfig : false,
+          enableSSL: deployType === "vps" && enableSSL && !!email,
           projectId: projectId || undefined,
         },
         apiClient
@@ -337,7 +341,7 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
         >
           <div className="flex-shrink-0 flex items-center justify-between p-6 border-b border-white/10">
             <div>
-              <h2 className="text-2xl font-bold text-white">Деплой на VPS</h2>
+              <h2 className="text-2xl font-bold text-white">Развертывание проекта</h2>
               {!projectId && (
                 <p className="text-yellow-400 text-sm mt-1">
                   ⚠️ Сохраните проект перед деплоем, чтобы информация о развертывании сохранилась в профиле
@@ -379,6 +383,67 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
             </div>
           ) : (
             <div className="space-y-4">
+              {/* Выбор типа деплоя */}
+              <div>
+                <label className="block text-sm font-medium text-white/80 mb-3">
+                  Тип развертывания
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDeployType("vps")}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      deployType === "vps"
+                        ? "border-white/50 bg-white/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
+                    disabled={loading}
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold text-white mb-1">VPS (свой сервер)</div>
+                      <div className="text-xs text-white/60">
+                        Деплой на ваш собственный сервер через SSH
+                      </div>
+                    </div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeployType("builder_vps")}
+                    className={`p-4 rounded-lg border-2 transition-all ${
+                      deployType === "builder_vps"
+                        ? "border-white/50 bg-white/10"
+                        : "border-white/10 bg-white/5 hover:border-white/20"
+                    }`}
+                    disabled={loading}
+                  >
+                    <div className="text-left">
+                      <div className="font-semibold text-white mb-1">VPS сервер конструктора</div>
+                      <div className="text-xs text-white/60">
+                        Деплой на VPS сервер конструктора (настройки из админки)
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
+              {deployType === "builder_vps" ? (
+                /* Форма для деплоя на VPS сервер конструктора */
+                <div className="space-y-4">
+                  {error && (
+                    <div className="p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
+                      {error}
+                    </div>
+                  )}
+                  <div className="p-4 bg-blue-500/10 border border-blue-500/30 rounded-lg">
+                    <p className="text-sm text-white/80">
+                      Деплой будет выполнен на VPS сервер конструктора, настроенный в админ-панели.
+                      Используется сервер по умолчанию (если указан) или первый активный сервер.
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                /* Форма для VPS деплоя */
+                <>
               {/* Список сохраненных VPS */}
               {savedVPSList.length > 0 && (
                 <div className="mb-4">
@@ -646,7 +711,10 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
                   </div>
                 </div>
               )}
+                </>
+              )}
 
+              {/* Кнопки деплоя - показываются всегда */}
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={onClose}

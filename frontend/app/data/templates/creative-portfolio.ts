@@ -83,8 +83,8 @@ export const creativePortfolioTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif; }
-button:hover, div[style*="cursor: pointer"]:hover { transform: translateY(-5px); transition: transform 0.3s; }
-a:hover { opacity: 0.7; transition: opacity 0.2s; }
+button:hover, div[style*="cursor: pointer"]:hover { }
+a:hover { opacity: 0.7; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h1 { font-size: 3rem !important; line-height: 1.1 !important; }

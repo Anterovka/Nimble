@@ -69,8 +69,8 @@ export const saasModernTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Inter', sans-serif; }
-button:hover { transform: translateY(-2px); transition: transform 0.2s; }
-a:hover { opacity: 0.8; transition: opacity 0.2s; }
+button:hover { }
+a:hover { opacity: 0.8; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; line-height: 1.2 !important; }

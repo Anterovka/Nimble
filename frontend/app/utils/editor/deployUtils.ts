@@ -317,11 +317,12 @@ export async function createDeployZip(
  * Интерфейс параметров деплоя
  */
 export interface DeployParams {
-  host: string;
+  deployType?: 'vps' | 'builder_vps';
+  host?: string;
   port?: number;
-  username: string;
-  password: string;
-  deployPath: string;
+  username?: string;
+  password?: string;
+  deployPath?: string;
   domain?: string;
   email?: string;
   nginxConfig?: boolean;
@@ -350,21 +351,36 @@ export async function deployToVPS(
     
     const formData = new FormData();
     formData.append('site_zip', zipFile);
-    formData.append('host', params.host);
-    if (params.port) {
-      formData.append('port', params.port.toString());
+    formData.append('deploy_type', params.deployType || 'vps');
+    
+    if (params.deployType === 'vps') {
+      // VPS параметры (свой сервер)
+      if (params.host) {
+        formData.append('host', params.host);
+      }
+      if (params.port) {
+        formData.append('port', params.port.toString());
+      }
+      if (params.username) {
+        formData.append('username', params.username);
+      }
+      if (params.password) {
+        formData.append('password', params.password);
+      }
+      if (params.deployPath) {
+        formData.append('deploy_path', params.deployPath);
+      }
+      if (params.domain) {
+        formData.append('domain', params.domain);
+      }
+      if (params.email) {
+        formData.append('email', params.email);
+      }
+      formData.append('nginx_config', params.nginxConfig ? 'true' : 'false');
+      formData.append('enable_ssl', params.enableSSL ? 'true' : 'false');
     }
-    formData.append('username', params.username);
-    formData.append('password', params.password);
-    formData.append('deploy_path', params.deployPath);
-    if (params.domain) {
-      formData.append('domain', params.domain);
-    }
-    if (params.email) {
-      formData.append('email', params.email);
-    }
-    formData.append('nginx_config', params.nginxConfig ? 'true' : 'false');
-    formData.append('enable_ssl', params.enableSSL ? 'true' : 'false');
+    // Для builder_vps параметры не нужны - используются из админки
+    
     if (params.projectId) {
       formData.append('project_id', params.projectId.toString());
     }

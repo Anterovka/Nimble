@@ -116,9 +116,9 @@ export const photographerStudioTemplate: Template = {
 </div>`,
   css: `* { margin: 0; padding: 0; box-sizing: border-box; }
 body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; }
-button:hover { transform: translateY(-2px); transition: transform 0.2s; box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important; }
-div[style*="cursor: pointer"]:hover { transform: scale(1.02); transition: transform 0.3s; }
-a:hover { opacity: 0.7; transition: opacity 0.2s; }
+button:hover { box-shadow: 0 5px 20px rgba(0,0,0,0.15) !important; }
+div[style*="cursor: pointer"]:hover { }
+a:hover { opacity: 0.7; }
 @media (max-width: 768px) {
   header nav { display: none !important; }
   h2 { font-size: 2.5rem !important; }

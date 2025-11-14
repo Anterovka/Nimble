@@ -12,6 +12,7 @@ from .views import (
     user_projects,
     subscription_view,
     deploy_view,
+    serve_deployed_site,
 )
 
 router = DefaultRouter()
@@ -29,5 +30,8 @@ urlpatterns = [
     path('auth/subscription/', subscription_view, name='subscription'),
     # Деплой
     path('deploy/', deploy_view, name='deploy'),
+    # Обслуживание задеплоенных сайтов
+    path('deployed/<str:subdomain>/', serve_deployed_site, name='serve_deployed_site'),
+    path('deployed/<str:subdomain>/<path:path>', serve_deployed_site, name='serve_deployed_site_path'),
 ]
 
