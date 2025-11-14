@@ -95,68 +95,31 @@ export function applyHeaderFooter(
   const targetContainer = pageShell || wrapper;
   const containerComponents = targetContainer.components?.();
 
-  // Используем встроенный метод GrapesJS для поиска компонентов
-  let existingHeader: any = null;
-  let existingFooter: any = null;
-
-  // Ищем header - сначала по классу nimble-header, потом по тегу header в начале
-  try {
-    // Сначала ищем по классу
-    const headerByClass = targetContainer.find?.('.nimble-header');
-    if (headerByClass) {
-      const headerArray = Array.isArray(headerByClass) ? headerByClass : [headerByClass];
-      if (headerArray.length > 0) {
-        existingHeader = headerArray[0];
+  function findComponent(selector: string, tagName: string, fromEnd = false): any {
+    try {
+      const byClass = targetContainer.find?.(selector);
+      if (byClass) {
+        const arr = Array.isArray(byClass) ? byClass : [byClass];
+        if (arr.length > 0) return arr[0];
       }
-    }
-    
-    // Если не нашли по классу, ищем первый header в начале контейнера
-    if (!existingHeader) {
+      
       const allComponents = targetContainer.components?.() || [];
       const compsArray = Array.isArray(allComponents) ? allComponents : Array.from(allComponents || []);
+      const range = fromEnd ? Array.from({ length: compsArray.length }, (_, i) => compsArray.length - 1 - i) : compsArray;
       
-      // Ищем первый header элемент
-      for (const comp of compsArray) {
-        const tagName = comp.get?.('tagName')?.toLowerCase();
-        if (tagName === 'header') {
-          existingHeader = comp;
-          break;
+      for (const comp of range) {
+        if (comp.get?.('tagName')?.toLowerCase() === tagName) {
+          return comp;
         }
       }
+    } catch (e) {
+      console.warn(`Ошибка при поиске ${tagName}:`, e);
     }
-  } catch (e) {
-    console.warn('Ошибка при поиске header:', e);
+    return null;
   }
 
-  // Ищем footer - сначала по классу nimble-footer, потом по тегу footer в конце
-  try {
-    // Сначала ищем по классу
-    const footerByClass = targetContainer.find?.('.nimble-footer');
-    if (footerByClass) {
-      const footerArray = Array.isArray(footerByClass) ? footerByClass : [footerByClass];
-      if (footerArray.length > 0) {
-        existingFooter = footerArray[0];
-      }
-    }
-    
-    // Если не нашли по классу, ищем последний footer в конце контейнера
-    if (!existingFooter) {
-      const allComponents = targetContainer.components?.() || [];
-      const compsArray = Array.isArray(allComponents) ? allComponents : Array.from(allComponents || []);
-      
-      // Ищем последний footer элемент (с конца)
-      for (let i = compsArray.length - 1; i >= 0; i--) {
-        const comp = compsArray[i];
-        const tagName = comp.get?.('tagName')?.toLowerCase();
-        if (tagName === 'footer') {
-          existingFooter = comp;
-          break;
-        }
-      }
-    }
-  } catch (e) {
-    console.warn('Ошибка при поиске footer:', e);
-  }
+  const existingHeader = findComponent('.nimble-header', 'header');
+  const existingFooter = findComponent('.nimble-footer', 'footer', true);
 
   // Убеждаемся, что стили для header/footer загружены
   const currentStyles = editor.getStyle() || '';
@@ -349,108 +312,58 @@ export function applyHeaderFooter(
 }
 `;
 
-  // Проверяем, есть ли уже стили для header/footer
   if (!currentStyles.includes('.nimble-header')) {
     editor.addStyle(headerFooterStyles);
   }
 
-  // Обновляем или добавляем header
-  if (existingHeader) {
-    console.log('Найден существующий header, обновляем его');
-    // Обновляем существующий header, заменяя его содержимое
-    const parent = existingHeader.parent();
+  function replaceComponent(existing: any, newHtml: string, insertAt: number | null = null) {
+    const parent = existing.parent();
     if (parent) {
+      existing.remove();
       const components = parent.components();
-      // Находим индекс существующего header вручную
-      let headerIndex = -1;
-      const compsArray = Array.isArray(components) ? components : Array.from(components || []);
-      for (let i = 0; i < compsArray.length; i++) {
-        if (compsArray[i] === existingHeader) {
-          headerIndex = i;
-          break;
-        }
-      }
-      
-      console.log('Индекс header:', headerIndex);
-      
-      // Удаляем старый header
-      existingHeader.remove();
-      
-      // Добавляем новый header на то же место
-      if (headerIndex >= 0) {
-        components.add(headerHtml, { at: headerIndex });
-        console.log('Header добавлен на позицию', headerIndex);
+      if (insertAt !== null) {
+        components.add(newHtml, { at: insertAt });
       } else {
-        components.add(headerHtml, { at: 0 });
-        console.log('Header добавлен в начало');
+        components.add(newHtml);
       }
     } else {
-      // Если нет родителя, просто заменяем
-      console.log('Нет родителя, используем replaceWith');
-      existingHeader.replaceWith(headerHtml);
-    }
-  } else {
-    console.log('Header не найден, добавляем новый');
-    // Добавляем header только если его нет
-    if (containerComponents) {
-      containerComponents.add(headerHtml, { at: 0 });
-    }
-  }
-    
-  // Обновляем или добавляем footer
-  if (existingFooter) {
-    // Обновляем существующий footer, заменяя его содержимое
-    const parent = existingFooter.parent();
-    if (parent) {
-      const components = parent.components();
-      // Находим индекс существующего footer вручную
-      let footerIndex = -1;
-      const compsArray = Array.isArray(components) ? components : Array.from(components || []);
-      for (let i = 0; i < compsArray.length; i++) {
-        if (compsArray[i] === existingFooter) {
-          footerIndex = i;
-          break;
-        }
-      }
-      
-      // Удаляем старый footer
-      existingFooter.remove();
-      
-      // Добавляем новый footer на то же место
-      if (footerIndex >= 0) {
-        components.add(footerHtml, { at: footerIndex });
-      } else {
-        components.add(footerHtml);
-      }
-    } else {
-      // Если нет родителя, просто заменяем
-      existingFooter.replaceWith(footerHtml);
-    }
-  } else {
-    // Добавляем footer только если его нет (в конец)
-    if (containerComponents) {
-      containerComponents.add(footerHtml);
+      existing.replaceWith(newHtml);
     }
   }
 
-  // Проверяем, не добавились ли дубликаты (на всякий случай)
+  if (existingHeader) {
+    const parent = existingHeader.parent();
+    const components = parent?.components();
+    const compsArray = components ? (Array.isArray(components) ? components : Array.from(components)) : [];
+    const headerIndex = compsArray.indexOf(existingHeader);
+    replaceComponent(existingHeader, headerHtml, headerIndex >= 0 ? headerIndex : 0);
+  } else if (containerComponents) {
+    containerComponents.add(headerHtml, { at: 0 });
+  }
+    
+  if (existingFooter) {
+    const parent = existingFooter.parent();
+    const components = parent?.components();
+    const compsArray = components ? (Array.isArray(components) ? components : Array.from(components)) : [];
+    const footerIndex = compsArray.indexOf(existingFooter);
+    replaceComponent(existingFooter, footerHtml, footerIndex >= 0 ? footerIndex : null);
+  } else if (containerComponents) {
+    containerComponents.add(footerHtml);
+  }
+
   setTimeout(() => {
     const allHeaders = targetContainer.find?.('header') || [];
     const allFooters = targetContainer.find?.('footer') || [];
     const headersArray = Array.isArray(allHeaders) ? allHeaders : [allHeaders];
     const footersArray = Array.isArray(allFooters) ? allFooters : [allFooters];
     
-    // Если есть больше одного header, удаляем лишние (оставляем первый)
     if (headersArray.length > 1) {
-      console.warn('Обнаружено несколько header, удаляем лишние');
       for (let i = 1; i < headersArray.length; i++) {
         headersArray[i].remove();
       }
     }
     
-    // Если есть больше одного footer, удаляем лишние (оставляем последний)
     if (footersArray.length > 1) {
-      console.warn('Обнаружено несколько footer, удаляем лишние');
       for (let i = 0; i < footersArray.length - 1; i++) {
         footersArray[i].remove();
       }

@@ -1,6 +1,6 @@
 import JSZip from 'jszip';
 
-async function imageToBase64(url: string): Promise<string> {
+async function urlToBase64(url: string, type: 'image' | 'font' = 'image'): Promise<string> {
   try {
     const response = await fetch(url);
     const blob = await response.blob();
@@ -14,26 +14,7 @@ async function imageToBase64(url: string): Promise<string> {
       reader.readAsDataURL(blob);
     });
   } catch (error) {
-    console.warn(`Не удалось загрузить изображение ${url}:`, error);
-    return url; // Возвращаем оригинальный URL в случае ошибки
-  }
-}
-
-async function fontToBase64(url: string): Promise<string> {
-  try {
-    const response = await fetch(url);
-    const blob = await response.blob();
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const base64 = reader.result as string;
-        resolve(base64);
-      };
-      reader.onerror = reject;
-      reader.readAsDataURL(blob);
-    });
-  } catch (error) {
-    console.warn(`Не удалось загрузить шрифт ${url}:`, error);
+    console.warn(`Не удалось загрузить ${type === 'image' ? 'изображение' : 'шрифт'} ${url}:`, error);
     return url;
   }
 }
@@ -220,7 +201,7 @@ async function inlineAssets(html: string, css: string): Promise<{ html: string; 
     }
     
     try {
-      const base64 = await imageToBase64(src);
+      const base64 = await urlToBase64(src, 'image');
       if (base64 && base64.startsWith('data:')) {
         const newAttributes = imgTag.attributes.replace(/src\s*=\s*(["']?)([^"'\s>]+)\1/i, `src=${quote}${base64}${quote}`);
         const newFullMatch = `<img ${newAttributes}>`;
@@ -241,7 +222,7 @@ async function inlineAssets(html: string, css: string): Promise<{ html: string; 
     }
     
     try {
-      const base64 = await imageToBase64(url);
+      const base64 = await urlToBase64(url, 'image');
       processedCss = processedCss.replace(match[0], `url(${base64})`);
     } catch (error) {
     }
@@ -258,7 +239,7 @@ async function inlineAssets(html: string, css: string): Promise<{ html: string; 
     }
     
     try {
-      const base64 = await fontToBase64(url);
+      const base64 = await urlToBase64(url, 'font');
       processedCss = processedCss.replace(match[0], match[0].replace(url, base64));
     } catch (error) {
     }

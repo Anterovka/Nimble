@@ -1,4 +1,13 @@
-// Утилиты для экспорта HTML/CSS
+function downloadFile(blob: Blob, filename: string) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  return url;
+}
 
 export function exportHTML(editor: any) {
   const html = editor.getHtml();
@@ -22,26 +31,10 @@ export function exportHTML(editor: any) {
   const htmlBlob = new Blob([fullHtml], { type: "text/html;charset=utf-8" });
   const cssBlob = new Blob([css], { type: "text/css;charset=utf-8" });
   
-  const htmlUrl = URL.createObjectURL(htmlBlob);
-  const cssUrl = URL.createObjectURL(cssBlob);
+  const htmlUrl = downloadFile(htmlBlob, "index.html");
   
-  // Скачиваем HTML
-  const htmlLink = document.createElement("a");
-  htmlLink.href = htmlUrl;
-  htmlLink.download = "index.html";
-  document.body.appendChild(htmlLink);
-  htmlLink.click();
-  document.body.removeChild(htmlLink);
-  
-  // Скачиваем CSS с небольшой задержкой
   setTimeout(() => {
-    const cssLink = document.createElement("a");
-    cssLink.href = cssUrl;
-    cssLink.download = "styles.css";
-    document.body.appendChild(cssLink);
-    cssLink.click();
-    document.body.removeChild(cssLink);
-    
+    const cssUrl = downloadFile(cssBlob, "styles.css");
     URL.revokeObjectURL(htmlUrl);
     URL.revokeObjectURL(cssUrl);
   }, 100);

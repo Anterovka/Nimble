@@ -108,23 +108,47 @@ const InputWithUnit = ({
   const numericValue = numericPart ? parseFloat(numericPart) : (showSlider ? sliderMin : 0);
   const isValidNumber = !isNaN(numericValue) && isFinite(numericValue);
 
+  // Состояние для хранения числового значения во время ввода
+  const [inputValue, setInputValue] = useState(numericPart);
+  const [isEditing, setIsEditing] = useState(false);
+
+  // Обновляем inputValue при изменении value извне (только если не редактируем)
+  useEffect(() => {
+    if (!isEditing) {
+      const newNumericPart = value.replace(/[^0-9.\-]/g, "");
+      setInputValue(newNumericPart);
+    }
+  }, [value, isEditing]);
+
   const handleInputChange = (event: ChangeEvent<HTMLInputElement>) => {
     const rawValue = event.target.value;
-    if (!rawValue.trim()) {
+    
+    // Разрешаем ввод только чисел, точки и минуса
+    const cleanedValue = rawValue.replace(/[^0-9.\-]/g, "");
+    setInputValue(cleanedValue);
+    setIsEditing(true);
+    
+    // Если поле пустое, очищаем значение
+    if (!cleanedValue.trim()) {
       onChange(property, "");
       return;
     }
 
-    const trimmed = rawValue.trim();
-    const numericPattern = /^-?\d+(?:\.\d+)?$/;
-    const numericWithUnitPattern = /^-?\d+(?:\.\d+)?[a-z%]+$/i;
+    // Сохраняем только число без единиц (временно, единицы добавятся при blur)
+    onChange(property, cleanedValue);
+  };
 
-    if (numericPattern.test(trimmed)) {
-      onChange(property, `${trimmed}${currentUnit}`);
-    } else if (numericWithUnitPattern.test(trimmed)) {
-      onChange(property, trimmed);
-    } else {
-      onChange(property, trimmed);
+  const handleInputFocus = () => {
+    setIsEditing(true);
+  };
+
+  const handleInputBlur = () => {
+    setIsEditing(false);
+    // При потере фокуса добавляем единицы измерения, если есть число
+    if (inputValue.trim() && !isNaN(parseFloat(inputValue))) {
+      onChange(property, `${inputValue}${currentUnit}`);
+    } else if (!inputValue.trim()) {
+      onChange(property, "");
     }
   };
 
@@ -157,15 +181,27 @@ const InputWithUnit = ({
       <div className="styles-input-group">
         <input
           type="text"
-          value={value}
+          value={inputValue}
           onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
           placeholder="auto"
         />
         <select
           value={currentUnit}
           onChange={(e) => {
             const nextUnit = e.target.value;
-            onChange(property, numericPart ? `${numericPart}${nextUnit}` : "");
+            // Используем inputValue, если оно есть, иначе numericPart из текущего value
+            const numValue = inputValue.trim() || numericPart;
+            if (numValue && !isNaN(parseFloat(numValue))) {
+              const newValue = `${numValue}${nextUnit}`;
+              onChange(property, newValue);
+              // Обновляем inputValue, чтобы оно соответствовало новому значению
+              setInputValue(numValue);
+            } else {
+              onChange(property, "");
+              setInputValue("");
+            }
           }}
         >
           {units.map((unit) => (

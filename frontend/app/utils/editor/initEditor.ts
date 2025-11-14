@@ -938,9 +938,7 @@ export function initEditor(
   return editor;
 }
 
-/**
- * Загружает кастомные блоки из БД и добавляет их в редактор
- */
+/* Загружает кастомные блоки из БД и добавляет их в редактор */
 async function loadCustomBlocks(editor: any) {
   try {
     const blocks = await getBlocks();
@@ -1002,9 +1000,7 @@ async function loadCustomBlocks(editor: any) {
   }
 }
 
-/**
- * Создает стандартный label для блока
- */
+/* Создает стандартный label для блока */
 function createDefaultLabel(block: { name: string; preview?: string; description?: string }): string {
   return `
     <div style="display: flex; align-items: center; gap: 8px; padding: 8px;">

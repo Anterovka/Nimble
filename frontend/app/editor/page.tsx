@@ -1245,9 +1245,9 @@ function EditorContent() {
       )}
       <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-[#1a1a22] via-[#101016] to-[#09090d] text-slate-50 overflow-hidden">
       <header ref={topbarRef} className="bg-[rgba(10,10,14,0.82)] border-b border-white/6 shadow-[0_18px_46px_rgba(3,3,5,0.65)] backdrop-blur-[28px] backdrop-saturate-[185%] transition-all duration-300 relative z-[60]">
-        <div className="flex items-center justify-between px-[clamp(18px,3.6vw,36px)] py-[clamp(14px,2.6vw,22px)] gap-[clamp(18px,3vw,32px)] flex-wrap">
-          <div className="flex items-center gap-[clamp(16px,2vw,26px)]" style={{ marginLeft: '56px' }}>
-            <Link href="/" className="inline-flex items-center justify-center w-[clamp(44px,4vw,52px)] h-[clamp(44px,4vw,52px)] rounded-[14px] bg-transparent border-none shadow-none transition-transform duration-[250ms] hover:-translate-y-0.5" aria-label="На главную">
+        <div className="flex items-center justify-between px-3 min-[810px]:px-[clamp(18px,3.6vw,36px)] py-2 min-[810px]:py-[clamp(14px,2.6vw,22px)] gap-2 min-[810px]:gap-[clamp(18px,3vw,32px)] flex-wrap">
+          <div className="flex items-center gap-2 min-[810px]:gap-[clamp(16px,2vw,26px)] min-w-0">
+            <Link href="/" className="inline-flex items-center justify-center w-[clamp(40px,4vw,52px)] h-[clamp(40px,4vw,52px)] rounded-[14px] bg-transparent border-none shadow-none transition-transform duration-[250ms] hover:-translate-y-0.5 flex-shrink-0" aria-label="На главную">
               <svg width="40" height="40" viewBox="0 0 40 40" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <path
                   d="M20 4L32 12V28L20 36L8 28V12L20 4Z"
@@ -1272,12 +1272,13 @@ function EditorContent() {
                 />
               </svg>
             </Link>
-            <div className="flex flex-col gap-1.5">
-              <span className="text-[clamp(18px,2.6vw,24px)] font-bold tracking-[0.035em] text-slate-50">Nimble</span>
-              <span className="text-[clamp(12px,1.5vw,13px)] uppercase tracking-[0.12em] text-slate-200/55">Режим конструктора</span>
+            <div className="flex flex-col gap-1.5 min-w-0">
+              <span className="text-[clamp(16px,2.6vw,24px)] font-bold tracking-[0.035em] text-slate-50 truncate">Nimble</span>
+              <span className="text-[clamp(11px,1.5vw,13px)] uppercase tracking-[0.12em] text-slate-200/55 hidden min-[810px]:block">Режим конструктора</span>
             </div>
           </div>
-          <div className="flex items-center gap-[clamp(12px,1.8vw,20px)] flex-wrap">
+          <div className="flex items-center gap-2 min-[810px]:gap-[clamp(12px,1.8vw,20px)] flex-wrap">
+            {/* Кнопка сохранения */}
             <button
               type="button"
               className={`inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border-transparent transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none ${
@@ -1298,82 +1299,77 @@ function EditorContent() {
                 <path d="M17 21v-8H7v8" />
               </svg>
             </button>
+
+            {/* Кнопка предпросмотра */}
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
               onClick={handleOpenPreview}
               disabled={!editorReady}
+              title="Предпросмотр"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7-11-7-11-7z" />
                 <circle cx="12" cy="12" r="3" />
               </svg>
-              Предпросмотр
+              <span className="hidden xl:inline">Предпросмотр</span>
             </button>
+
+            {/* Кнопка экспорта */}
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
               onClick={() => {
                 if (editorInstance) {
                   setShowExportPreview(true);
                 }
               }}
               disabled={!editorReady}
+              title="Экспорт"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M12 3v12" />
                 <path d="M7 11l5 5 5-5" />
                 <path d="M5 21h14" />
               </svg>
-              Экспорт
+              <span className="hidden xl:inline">Экспорт</span>
             </button>
+
+            {/* Кнопка деплоя */}
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
               onClick={() => {
                 if (editorInstance) {
                   setShowDeployModal(true);
                 }
               }}
               disabled={!editorReady}
+              title="Развернуть на сервере"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z" />
                 <polyline points="3.27 6.96 12 12.01 20.73 6.96" />
                 <line x1="12" y1="22.08" x2="12" y2="12" />
               </svg>
-              Развернуть на сервере
+              <span className="hidden 2xl:inline">Развернуть на сервере</span>
             </button>
+
+            {/* Кнопка палитр */}
             <button
               type="button"
-              className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
+              className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
               onClick={() => setShowThemeModal(true)}
               disabled={!editorReady}
+              title="Палитры"
             >
               <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                 <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
               </svg>
-              Палитры
+              <span className="hidden xl:inline">Палитры</span>
             </button>
-            <button
-              type="button"
-              className="inline-flex items-center justify-center gap-2 px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)]"
-              onClick={() => setShowRightPanel(!showRightPanel)}
-              aria-label="Переключить панель стилей"
-            >
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <path d="M4 21v-7" />
-                <path d="M4 10V3" />
-                <path d="M12 21v-9" />
-                <path d="M12 8V3" />
-                <path d="M20 21v-5" />
-                <path d="M20 12V3" />
-                <rect x="2" y="10" width="4" height="4" rx="1" />
-                <rect x="10" y="13" width="4" height="4" rx="1" />
-                <rect x="18" y="16" width="4" height="4" rx="1" />
-              </svg>
-              Стили
-            </button>
+
+            {/* Кнопка очистки */}
             <button
               type="button"
               className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border border-red-400/35 bg-red-500/15 text-red-200 shadow-[0_8px_16px_rgba(239,68,68,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-red-400/50 hover:bg-red-500/25 hover:text-red-100 hover:shadow-[0_8px_16px_rgba(239,68,68,0.066)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1437,7 +1433,7 @@ function EditorContent() {
 
       <div className="editor-body flex-1 flex overflow-hidden relative">
         {/* Левая вертикальная панель с иконками (Webflow style) */}
-        <div className="editor-left-sidebar">
+        <div className="editor-left-sidebar" style={{ top: `${topbarHeight}px`, height: `calc(100vh - ${topbarHeight}px)` }}>
           <div className="editor-sidebar-icons">
             <button
               type="button"

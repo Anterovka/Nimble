@@ -12,7 +12,7 @@ export const editorConfig = {
   },
   layerManager: {
     appendTo: ".layers-container",
-    show: false, // Скрываем стандартный layer manager, используем свой
+    show: false,
   },
   canvas: {
     styles: [],
