@@ -1,0 +1,111 @@
+@import "tailwindcss";
+
+/* Editor user styles for all pages */
+.editor-user-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+  padding: 6px;
+  padding-right: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.editor-user-group:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 8px 24px rgba(92, 92, 92, 0.1);
+}
+
+.user-avatar-circle,
+.editor-user-avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, #464646 0%, #777777 50%, #838383 100%);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 16px;
+  letter-spacing: 0.04em;
+  color: #ffffff;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  position: relative;
+  transition: all 0.3s ease;
+  text-decoration: none;
+}
+
+.user-avatar-circle:hover,
+.editor-user-avatar:hover {
+  transform: translateY(-2px);
+}
+
+.user-avatar-circle::after,
+.editor-user-avatar::after {
+  content: "";
+  position: absolute;
+  top: -2px;
+  right: -2px;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  background: #10b981;
+  border: 2px solid rgba(5, 5, 5, 0.9);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.5);
+}
+
+.editor-logout-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: #f87171;
+  transition: background 0.2s ease, color 0.2s ease, border 0.2s ease;
+  cursor: pointer;
+}
+
+.editor-logout-button:hover {
+  background: rgba(248, 113, 113, 0.18);
+  border-color: rgba(248, 113, 113, 0.28);
+  color: #fca5a5;
+}
+
+:root {
+  --background: #050505;
+  --foreground: #ededed;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+}
+
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  max-width: 100vw;
+}
+
+.no-scrollbar {
+  -ms-overflow-style: none;  /* IE и Edge */
+  scrollbar-width: none;     /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome / Safari / Edge */
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  position: relative;
+}

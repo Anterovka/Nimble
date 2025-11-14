@@ -1,0 +1,95 @@
+version: '3.8'
+
+services:
+  # База данных MySQL
+  db:
+    image: mysql:8.0
+    container_name: nimble_mysql
+    restart: always
+    environment:
+      MYSQL_DATABASE: nimble
+      MYSQL_USER: nimble_user
+      MYSQL_PASSWORD: nimble_password
+      MYSQL_ROOT_PASSWORD: root_password
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_unicode_ci
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - nimble_network
+
+  # Backend (Django)
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: nimble_backend
+    restart: always
+    volumes:
+      - ./backend:/app
+      - static_volume:/app/staticfiles
+      - media_volume:/app/media
+    ports:
+      - "8000:8000"
+    environment:
+      - DEBUG=True
+      - SECRET_KEY=${SECRET_KEY:-django-insecure-docker-secret-key-change-in-production}
+      - DB_NAME=nimble
+      - DB_USER=nimble_user
+      - DB_PASSWORD=nimble_password
+      - DB_HOST=db
+      - DB_PORT=3306
+      - CORS_ALLOWED_ORIGINS=http://localhost:3000,http://frontend:3000
+    depends_on:
+      db:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/api/')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nimble_network
+    # Entrypoint скрипт выполнит миграции и создаст суперпользователя
+    # CMD переопределяется для запуска gunicorn
+    command: gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 --access-logfile - --error-logfile - tildarus_backend.wsgi:application
+
+  # Frontend (Next.js)
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: nimble_frontend
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    healthcheck:
+      test: ["CMD", "node", "-e", "require('http').get('http://localhost:3000', (r) => {process.exit(r.statusCode === 200 ? 0 : 1)})"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - nimble_network
+
+volumes:
+  mysql_data:
+  static_volume:
+  media_volume:
+
+networks:
+  nimble_network:
+    driver: bridge
+
