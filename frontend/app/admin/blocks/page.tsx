@@ -176,11 +176,14 @@ export default function BlocksAdminPage() {
             <select
               value={selectedCategory}
               onChange={(e) => setSelectedCategory(e.target.value)}
-              className="px-4 py-2.5 bg-white/5 border border-white/10 rounded-xl text-white backdrop-blur-sm hover:border-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20"
+              className="px-4 py-2.5 bg-[#1a1a1a] border border-white/10 rounded-xl text-white backdrop-blur-sm hover:border-white/20 transition-colors focus:outline-none focus:ring-2 focus:ring-white/20"
+              style={{
+                colorScheme: 'dark'
+              }}
             >
-              <option value="">Все категории</option>
+              <option value="" style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>Все категории</option>
               {CATEGORIES.map(cat => (
-                <option key={cat} value={cat}>{cat}</option>
+                <option key={cat} value={cat} style={{ backgroundColor: '#1a1a1a', color: '#ffffff' }}>{cat}</option>
               ))}
             </select>
           </div>
