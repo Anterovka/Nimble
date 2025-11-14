@@ -259,8 +259,6 @@ class DeploySerializer(serializers.Serializer):
                         'domain': 'Домен обязателен для получения SSL сертификата'
                     })
         elif deploy_type == 'builder_vps':
-            # Для деплоя на VPS сервер конструктора параметры не нужны
-            # Они берутся из настроек в админке
             pass
         
         return attrs

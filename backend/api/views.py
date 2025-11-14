@@ -453,7 +453,7 @@ def deploy_view(request):
                 pass
         
         elif deploy_type == 'builder_vps':
-            # Деплой на VPS сервер конструктора (настройки из админки)
+            # Деплой на VPS сервер конструктора: получаем настройки из админки, подключаемся, деплоим файлы, настраиваем SSL/Nginx
             from .models import VPSServer
             from .deploy_utils import (
                 create_ssh_client,
@@ -462,7 +462,6 @@ def deploy_view(request):
                 obtain_ssl_certificate
             )
             
-            # Получаем VPS сервер (по умолчанию или первый активный)
             vps_server = VPSServer.objects.filter(is_active=True).order_by('-is_default', 'id').first()
             
             if not vps_server:
@@ -471,13 +470,11 @@ def deploy_view(request):
                     status=status.HTTP_400_BAD_REQUEST
                 )
             
-            # Генерируем путь для деплоя на основе проекта
             if project:
                 deploy_path = f"{vps_server.deploy_path}/{project.slug or f'project-{project.id}'}"
             else:
                 deploy_path = f"{vps_server.deploy_path}/project-{request.user.id}-{int(timezone.now().timestamp())}"
             
-            # Подключаемся к серверу
             ssh_client = create_ssh_client(
                 host=vps_server.host,
                 port=vps_server.port,
@@ -486,7 +483,6 @@ def deploy_view(request):
                 timeout=10
             )
             
-            # Деплоим файлы
             success, message = deploy_files(
                 ssh=ssh_client,
                 zip_path=temp_zip.name,
@@ -502,7 +498,6 @@ def deploy_view(request):
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
             
-            # Настраиваем SSL если нужно
             ssl_success = True
             ssl_message = ""
             enable_ssl = vps_server.ssl_enabled
@@ -514,7 +509,6 @@ def deploy_view(request):
                     timeout=120
                 )
             
-            # Настраиваем Nginx если нужно
             nginx_success = True
             nginx_message = ""
             if vps_server.nginx_config_enabled:
@@ -529,7 +523,6 @@ def deploy_view(request):
                     timeout=30
                 )
             
-            # Генерируем URL
             protocol = 'https' if (enable_ssl and ssl_success) else 'http'
             if vps_server.domain:
                 url = f"{protocol}://{vps_server.domain}"
@@ -538,7 +531,6 @@ def deploy_view(request):
             
             ssh_client.close()
             
-            # Сохраняем информацию в проекте
             if project:
                 project.deploy_type = 'builder_vps'
                 project.deployed_url = url
@@ -563,7 +555,7 @@ def deploy_view(request):
             return Response(response_data, status=status.HTTP_200_OK)
         
         else:
-            # Деплой на VPS (существующая логика)
+            # Деплой на свой VPS: подключаемся, загружаем файлы, настраиваем SSL/Nginx, сохраняем информацию о деплое
             from .deploy_utils import (
                 create_ssh_client,
                 deploy_files,
@@ -691,14 +683,12 @@ def deploy_view(request):
             status=status.HTTP_500_INTERNAL_SERVER_ERROR
         )
     finally:
-        # Закрываем SSH соединение
         if ssh_client:
             try:
                 ssh_client.close()
             except:
                 pass
         
-        # Удаляем временные файлы
         for temp_file in temp_files:
             try:
                 if os.path.exists(temp_file):
@@ -709,29 +699,18 @@ def deploy_view(request):
 
 @require_http_methods(["GET"])
 def serve_deployed_site(request, subdomain: str, path: str = ""):
-    """
-    Обслуживает статические файлы задеплоенного сайта
-    
-    Args:
-        subdomain: Поддомен проекта
-        path: Путь к файлу (например, index.html, styles.css, images/photo.jpg)
-    
-    Returns:
-        FileResponse с содержимым файла или 404
-    """
+    """Обслуживает статические файлы задеплоенного сайта с проверкой безопасности пути и определением MIME типов"""
     from django.conf import settings
     from .subdomain_utils import get_deploy_path
     
     try:
         deploy_path = get_deploy_path(subdomain)
         
-        # Если path пустой, используем index.html
         if not path or path == "":
             file_path = deploy_path / "index.html"
         else:
             file_path = deploy_path / path
         
-        # Проверяем безопасность пути (защита от path traversal)
         try:
             file_path.resolve().relative_to(deploy_path.resolve())
         except ValueError:
@@ -740,7 +719,6 @@ def serve_deployed_site(request, subdomain: str, path: str = ""):
         if not file_path.exists() or not file_path.is_file():
             raise Http404("Файл не найден")
         
-        # Определяем MIME тип
         content_type = "text/html"
         if file_path.suffix == ".css":
             content_type = "text/css"

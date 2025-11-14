@@ -12,16 +12,7 @@ from django.core.exceptions import ValidationError
 
 
 def safe_decode(data: bytes, default: str = '') -> str:
-    """
-    Безопасно декодирует байты в UTF-8 строку
-    
-    Args:
-        data: Байты для декодирования
-        default: Значение по умолчанию, если декодирование не удалось
-    
-    Returns:
-        Декодированная строка
-    """
+    """Безопасно декодирует байты в UTF-8 строку с обработкой ошибок"""
     if not data:
         return default
     try:
@@ -79,22 +70,7 @@ def create_ssh_client(
     password: str,
     timeout: int = 10
 ) -> paramiko.SSHClient:
-    """
-    Создаёт SSH клиент с безопасными настройками (аутентификация по паролю)
-    
-    Args:
-        host: IP или домен VPS
-        port: SSH порт (по умолчанию 22)
-        username: SSH пользователь
-        password: SSH пароль
-        timeout: Таймаут подключения в секундах
-    
-    Returns:
-        Настроенный SSH клиент
-    
-    Raises:
-        ValidationError: При ошибках валидации или подключения
-    """
+    """Создаёт и подключает SSH клиент с валидацией параметров и аутентификацией по паролю"""
     validate_host(host)
     validate_username(username)
     
@@ -135,18 +111,7 @@ def deploy_files(
     username: str,
     timeout: int = 30
 ) -> Tuple[bool, str]:
-    """
-    Распаковывает ZIP и загружает файлы на VPS
-    
-    Args:
-        ssh: SSH клиент
-        zip_path: Путь к ZIP архиву
-        deploy_path: Путь на VPS для развёртывания
-        timeout: Таймаут операций в секундах
-    
-    Returns:
-        Tuple[bool, str]: (успех, сообщение)
-    """
+    """Распаковывает ZIP архив и загружает файлы (index.html, styles.css, images) на VPS через SFTP, устанавливает права доступа"""
     validate_deploy_path(deploy_path)
     
     sftp = None
@@ -372,81 +337,47 @@ def generate_nginx_config(
     use_ssl: bool = False,
     config_name: Optional[str] = None
 ) -> str:
-    """
-    Генерирует простой Nginx конфиг для статического сайта
-    
-    Args:
-        domain: Домен или IP
-        deploy_path: Путь к файлам на VPS
-        server_name: Имя сервера (если не указано, используется domain)
-        use_ssl: Использовать ли HTTPS (SSL)
-        config_name: Имя конфига для логирования (опционально)
-    
-    Returns:
-        Содержимое Nginx конфига
-    """
+    """Генерирует Nginx конфигурацию для статического сайта с поддержкой SSL и кеширования"""
     server_name = server_name or domain
     
-    # Если это IP адрес, используем listen с IP или _ (для всех интерфейсов)
-    # Для IP адреса server_name должен быть IP или _
     is_ip = re.match(r'^(\d{1,3}\.){3}\d{1,3}$', domain)
     if is_ip:
-        # Для IP используем _ в server_name (catch-all)
         server_name = '_'
     
-    # Генерируем имя для логов, если не указано
     log_name = config_name.replace('.conf', '') if config_name else domain.replace('.', '-')
     
     if use_ssl:
-        # Для SSL нужен домен, не IP
         ssl_domain = domain if not is_ip else server_name
         
-        # Конфиг с HTTPS
         config = f"""server {{
     listen 80;
     server_name {server_name};
-    
-    # Редирект на HTTPS
     return 301 https://{ssl_domain}$request_uri;
 }}
 
 server {{
     listen 443 ssl http2;
     server_name {server_name};
-    
-    # SSL сертификаты Let's Encrypt
     ssl_certificate /etc/letsencrypt/live/{ssl_domain}/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/{ssl_domain}/privkey.pem;
-    
-    # Настройки SSL
     ssl_protocols TLSv1.2 TLSv1.3;
     ssl_ciphers HIGH:!aNULL:!MD5;
     ssl_prefer_server_ciphers on;
-    
     root {deploy_path};
     index index.html index.htm;
-    
-    # Логирование для отладки
     access_log /var/log/nginx/{log_name}_access.log;
     error_log /var/log/nginx/{log_name}_error.log;
-    
     location / {{
         try_files $uri $uri/ /index.html;
     }}
-    
-    # Обработка favicon (чтобы не было ошибок в логах)
     location = /favicon.ico {{
         log_not_found off;
         access_log off;
     }}
-    
-    # Кеширование статических файлов
     location ~* \\.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {{
         expires 1y;
         add_header Cache-Control "public, immutable";
     }}
-    
-    # Запрет доступа к скрытым файлам
     location ~ /\\. {{
         deny all;
         access_log off;
@@ -455,35 +386,24 @@ server {{
 }}
 """
     else:
-        # Конфиг без HTTPS
         config = f"""server {{
     listen 80;
     server_name {server_name};
-    
     root {deploy_path};
     index index.html index.htm;
-    
-    # Логирование для отладки
     access_log /var/log/nginx/{log_name}_access.log;
     error_log /var/log/nginx/{log_name}_error.log;
-    
     location / {{
         try_files $uri $uri/ /index.html;
     }}
-    
-    # Обработка favicon (чтобы не было ошибок в логах)
     location = /favicon.ico {{
         log_not_found off;
         access_log off;
     }}
-    
-    # Кеширование статических файлов
     location ~* \\.(jpg|jpeg|png|gif|ico|css|js|svg|woff|woff2|ttf|eot)$ {{
         expires 1y;
         add_header Cache-Control "public, immutable";
     }}
-    
-    # Запрет доступа к скрытым файлам
     location ~ /\\. {{
         deny all;
         access_log off;
@@ -500,25 +420,12 @@ def obtain_ssl_certificate(
     email: str,
     timeout: int = 120
 ) -> Tuple[bool, str]:
-    """
-    Получает SSL сертификат через Let's Encrypt (certbot)
-    
-    Args:
-        ssh: SSH клиент
-        domain: Домен для сертификата
-        email: Email для уведомлений Let's Encrypt
-        timeout: Таймаут операций (certbot может работать долго)
-    
-    Returns:
-        Tuple[bool, str]: (успех, сообщение)
-    """
+    """Получает SSL сертификат через Let's Encrypt certbot в standalone режиме"""
     try:
-        # Проверяем, установлен ли certbot
         stdin, stdout, stderr = ssh.exec_command("which certbot", timeout=10)
         exit_status = stdout.channel.recv_exit_status()
         
         if exit_status != 0:
-            # Пробуем установить certbot
             install_commands = [
                 "apt-get update",
                 "apt-get install -y certbot python3-certbot-nginx"
@@ -531,12 +438,9 @@ def obtain_ssl_certificate(
                     error = safe_decode(stderr.read())
                     return False, f"Ошибка установки certbot: {error}. Убедитесь, что у пользователя есть права sudo."
         
-        # Останавливаем Nginx перед получением сертификата (standalone режим требует свободный порт 80)
-        # Пробуем остановить Nginx, игнорируем ошибки если он не запущен
         ssh.exec_command("sudo systemctl stop nginx", timeout=10)
         
         try:
-            # Получаем сертификат через certbot (standalone режим)
             certbot_cmd = (
                 f"sudo certbot certonly --standalone --non-interactive "
                 f"--agree-tos --email {email} -d {domain} "
@@ -546,7 +450,6 @@ def obtain_ssl_certificate(
             stdin, stdout, stderr = ssh.exec_command(certbot_cmd, timeout=timeout)
             exit_status = stdout.channel.recv_exit_status()
             
-            # Запускаем Nginx обратно
             ssh.exec_command("sudo systemctl start nginx", timeout=10)
             
             if exit_status == 0:
@@ -556,7 +459,6 @@ def obtain_ssl_certificate(
                 output = safe_decode(stdout.read())
                 error_msg = error if error else output
                 
-                # Проверяем типичные ошибки
                 if "port 80" in error_msg.lower() or "already in use" in error_msg.lower():
                     return False, f"Порт 80 занят. Убедитесь, что Nginx или другой веб-сервер не запущен, или используйте --webroot метод."
                 elif "connection refused" in error_msg.lower():
@@ -567,7 +469,6 @@ def obtain_ssl_certificate(
                     return False, f"Ошибка получения SSL сертификата: {error_msg}"
                     
         except Exception as e:
-            # В случае ошибки всё равно пытаемся запустить Nginx
             ssh.exec_command("sudo systemctl start nginx", timeout=10)
             raise e
                 
@@ -584,27 +485,13 @@ def deploy_nginx_config(
     use_ssl: bool = False,
     timeout: int = 30
 ) -> Tuple[bool, str]:
-    """
-    Генерирует и применяет Nginx конфиг
-    
-    Args:
-        ssh: SSH клиент
-        domain: Домен или IP
-        deploy_path: Путь к файлам
-        config_name: Имя конфига (если не указано, генерируется из domain)
-        timeout: Таймаут операций
-    
-    Returns:
-        Tuple[bool, str]: (успех, сообщение)
-    """
+    """Генерирует Nginx конфиг, загружает на сервер, создаёт симлинк, проверяет и перезагружает Nginx"""
     if not config_name:
-        # Генерируем имя конфига из domain (заменяем точки на дефисы)
         config_name = domain.replace('.', '-') + '.conf'
     
     config_content = generate_nginx_config(domain, deploy_path, use_ssl=use_ssl, config_name=config_name)
     
     try:
-        # Создаём временный файл с конфигом
         with tempfile.NamedTemporaryFile(mode='w', delete=False, suffix='.conf') as config_file:
             config_file.write(config_content)
             config_file_path = config_file.name
@@ -612,21 +499,17 @@ def deploy_nginx_config(
         try:
             sftp = ssh.open_sftp()
             
-            # Загружаем конфиг в /etc/nginx/sites-available/
             remote_config_path = f"/etc/nginx/sites-available/{config_name}"
             sftp.put(config_file_path, remote_config_path)
             
-            # Создаём симлинк в sites-enabled (пробуем с sudo и без)
             commands = [
                 f"ln -sf /etc/nginx/sites-available/{config_name} /etc/nginx/sites-enabled/{config_name}",
             ]
             
-            # Пробуем выполнить команды, сначала без sudo
             for cmd in commands:
                 stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)
                 exit_status = stdout.channel.recv_exit_status()
                 if exit_status != 0:
-                    # Если не получилось, пробуем с sudo
                     cmd_with_sudo = f"sudo {cmd}"
                     stdin, stdout, stderr = ssh.exec_command(cmd_with_sudo, timeout=timeout)
                     exit_status = stdout.channel.recv_exit_status()
@@ -634,27 +517,21 @@ def deploy_nginx_config(
                         error = safe_decode(stderr.read())
                         return False, f"Ошибка создания симлинка Nginx: {error}. Возможно, нужны права sudo."
             
-            # Проверяем, запущен ли Nginx
             stdin, stdout, stderr = ssh.exec_command("systemctl is-active nginx", timeout=timeout)
             nginx_status = safe_decode(stdout.read()).strip()
             if nginx_status != 'active':
-                # Пробуем запустить Nginx
                 stdin, stdout, stderr = ssh.exec_command("sudo systemctl start nginx", timeout=timeout)
                 exit_status = stdout.channel.recv_exit_status()
                 if exit_status != 0:
                     error = safe_decode(stderr.read())
                     return False, f"Nginx не запущен и не удалось его запустить: {error}. Выполните вручную: sudo systemctl start nginx"
             
-            # Проверка и перезагрузка Nginx (пробуем с sudo и без)
-            nginx_commands = [
-                "nginx -t",  # Проверка конфига
-            ]
+            nginx_commands = ["nginx -t"]
             
             for cmd in nginx_commands:
                 stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)
                 exit_status = stdout.channel.recv_exit_status()
                 if exit_status != 0:
-                    # Пробуем с sudo
                     cmd_with_sudo = f"sudo {cmd}"
                     stdin, stdout, stderr = ssh.exec_command(cmd_with_sudo, timeout=timeout)
                     exit_status = stdout.channel.recv_exit_status()
@@ -664,11 +541,7 @@ def deploy_nginx_config(
                         full_error = error if error else output
                         return False, f"Ошибка проверки конфига Nginx: {full_error}"
             
-            # Перезагружаем Nginx
-            reload_commands = [
-                "systemctl reload nginx",
-                "systemctl restart nginx"  # Если reload не работает, пробуем restart
-            ]
+            reload_commands = ["systemctl reload nginx", "systemctl restart nginx"]
             
             reload_success = False
             for cmd in reload_commands:
@@ -678,7 +551,6 @@ def deploy_nginx_config(
                     reload_success = True
                     break
                 else:
-                    # Пробуем с sudo
                     cmd_with_sudo = f"sudo {cmd}"
                     stdin, stdout, stderr = ssh.exec_command(cmd_with_sudo, timeout=timeout)
                     exit_status = stdout.channel.recv_exit_status()
@@ -690,7 +562,6 @@ def deploy_nginx_config(
                 error = safe_decode(stderr.read())
                 return False, f"Конфиг создан и проверен, но не удалось перезагрузить Nginx: {error}. Выполните вручную: sudo systemctl reload nginx"
             
-            # Проверяем, что конфиг действительно применен
             stdin, stdout, stderr = ssh.exec_command(
                 f"test -L /etc/nginx/sites-enabled/{config_name} && echo 'OK' || echo 'FAIL'",
                 timeout=timeout
@@ -699,7 +570,6 @@ def deploy_nginx_config(
             if symlink_check != 'OK':
                 return False, f"Симлинк Nginx не создан. Проверьте: ls -la /etc/nginx/sites-enabled/{config_name}"
             
-            # Проверяем, что index.html существует и доступен
             stdin, stdout, stderr = ssh.exec_command(
                 f"test -f {deploy_path}/index.html && echo 'EXISTS' || echo 'NOT_EXISTS'",
                 timeout=timeout
@@ -708,7 +578,6 @@ def deploy_nginx_config(
             if index_check != 'EXISTS':
                 return False, f"Файл index.html не найден в {deploy_path}. Проверьте путь развёртывания."
             
-            # Проверяем права доступа к файлу и директории
             stdin, stdout, stderr = ssh.exec_command(
                 f"ls -la {deploy_path}/index.html && stat -c '%a %U:%G' {deploy_path}/index.html",
                 timeout=timeout
@@ -716,7 +585,6 @@ def deploy_nginx_config(
             file_perms = safe_decode(stdout.read()).strip()
             print(f"📄 Права доступа к index.html: {file_perms}")
             
-            # Проверяем права на директорию
             stdin, stdout, stderr = ssh.exec_command(
                 f"ls -ld {deploy_path} && stat -c '%a %U:%G' {deploy_path}",
                 timeout=timeout
@@ -724,11 +592,7 @@ def deploy_nginx_config(
             dir_perms = safe_decode(stdout.read()).strip()
             print(f"📁 Права доступа к директории: {dir_perms}")
             
-            # Устанавливаем правильные права и владельца для всех файлов и директорий
-            # Устанавливаем владельца на указанного пользователя
-            chown_commands = [
-                f"sudo chown -R {username}:{username} {deploy_path}",
-            ]
+            chown_commands = [f"sudo chown -R {username}:{username} {deploy_path}"]
             
             for cmd in chown_commands:
                 stdin, stdout, stderr = ssh.exec_command(cmd, timeout=timeout)
@@ -737,13 +601,11 @@ def deploy_nginx_config(
                     error = safe_decode(stderr.read())
                     print(f"⚠️ Предупреждение при установке владельца ({cmd}): {error}")
             
-            # Затем устанавливаем права доступа
             commands = [
                 f"sudo chmod 755 {deploy_path}",
                 f"sudo chmod 644 {deploy_path}/index.html",
             ]
             
-            # Добавляем права для CSS, если есть
             stdin, stdout, stderr = ssh.exec_command(
                 f"test -f {deploy_path}/styles.css && echo 'EXISTS' || echo 'NOT_EXISTS'",
                 timeout=timeout
@@ -751,14 +613,12 @@ def deploy_nginx_config(
             css_check = safe_decode(stdout.read()).strip()
             if css_check == 'EXISTS':
                 commands.append(f"sudo chmod 644 {deploy_path}/styles.css")
-                # Проверяем размер CSS файла
                 stdin, stdout, stderr = ssh.exec_command(
                     f"stat -c '%s' {deploy_path}/styles.css",
                     timeout=timeout
                 )
                 css_size = safe_decode(stdout.read()).strip()
                 print(f"📄 CSS файл найден, размер: {css_size} байт")
-                # Проверяем первые строки CSS для диагностики
                 stdin, stdout, stderr = ssh.exec_command(
                     f"head -n 3 {deploy_path}/styles.css",
                     timeout=timeout
@@ -769,7 +629,6 @@ def deploy_nginx_config(
             else:
                 print(f"❌ ВНИМАНИЕ: styles.css не найден в {deploy_path}!")
             
-            # Добавляем права для папки images, если есть
             stdin, stdout, stderr = ssh.exec_command(
                 f"test -d {deploy_path}/images && echo 'EXISTS' || echo 'NOT_EXISTS'",
                 timeout=timeout
@@ -777,7 +636,6 @@ def deploy_nginx_config(
             images_check = safe_decode(stdout.read()).strip()
             if images_check == 'EXISTS':
                 commands.append(f"sudo chmod 755 {deploy_path}/images")
-                # Устанавливаем права для всех изображений
                 stdin, stdout, stderr = ssh.exec_command(
                     f"find {deploy_path}/images -type f -exec sudo chmod 644 {{}} \\;",
                     timeout=timeout
@@ -790,7 +648,6 @@ def deploy_nginx_config(
                     error = safe_decode(stderr.read())
                     print(f"⚠️ Предупреждение при установке прав ({cmd}): {error}")
             
-            # Проверяем, что файл читаемый для указанного пользователя
             stdin, stdout, stderr = ssh.exec_command(
                 f"sudo -u {username} test -r {deploy_path}/index.html && echo 'READABLE' || echo 'NOT_READABLE'",
                 timeout=timeout
@@ -799,7 +656,6 @@ def deploy_nginx_config(
             if readable_check != 'READABLE':
                 return False, f"Файл не читаемый для пользователя {username} после установки прав. Проверьте вручную: sudo -u {username} test -r {deploy_path}/index.html"
             
-            # Проверяем, что директория доступна для указанного пользователя
             stdin, stdout, stderr = ssh.exec_command(
                 f"sudo -u {username} test -x {deploy_path} && echo 'ACCESSIBLE' || echo 'NOT_ACCESSIBLE'",
                 timeout=timeout
@@ -808,7 +664,6 @@ def deploy_nginx_config(
             if dir_accessible != 'ACCESSIBLE':
                 return False, f"Директория не доступна для пользователя {username}. Проверьте вручную: sudo -u {username} test -x {deploy_path}"
             
-            # Проверяем конфиг Nginx еще раз после всех изменений
             stdin, stdout, stderr = ssh.exec_command("sudo nginx -t", timeout=timeout)
             exit_status = stdout.channel.recv_exit_status()
             if exit_status != 0:
@@ -818,7 +673,6 @@ def deploy_nginx_config(
                 print(f"❌ Ошибка проверки конфига Nginx:\n{full_error}")
                 return False, f"Ошибка в конфиге Nginx после применения: {full_error}"
             
-            # Проверяем содержимое конфига для диагностики
             stdin, stdout, stderr = ssh.exec_command(
                 f"cat /etc/nginx/sites-available/{config_name}",
                 timeout=timeout
@@ -827,7 +681,6 @@ def deploy_nginx_config(
             if config_content:
                 print(f"📋 Полный конфиг Nginx:\n{config_content}")
             
-            # Проверяем, что путь в конфиге существует и доступен
             stdin, stdout, stderr = ssh.exec_command(
                 f"test -d {deploy_path} && echo 'EXISTS' || echo 'NOT_EXISTS'",
                 timeout=timeout
@@ -836,7 +689,6 @@ def deploy_nginx_config(
             if path_exists != 'EXISTS':
                 return False, f"Путь {deploy_path} не существует на сервере!"
             
-            # Проверяем, что index.html существует
             stdin, stdout, stderr = ssh.exec_command(
                 f"test -f {deploy_path}/index.html && echo 'EXISTS' || echo 'NOT_EXISTS'",
                 timeout=timeout
@@ -845,7 +697,6 @@ def deploy_nginx_config(
             if index_exists != 'EXISTS':
                 return False, f"Файл {deploy_path}/index.html не существует!"
             
-            # Проверяем права доступа от имени указанного пользователя
             stdin, stdout, stderr = ssh.exec_command(
                 f"sudo -u {username} ls -la {deploy_path}/index.html",
                 timeout=timeout
@@ -854,7 +705,6 @@ def deploy_nginx_config(
             if user_ls:
                 print(f"📄 Список файлов от {username}: {user_ls}")
             
-            # Проверяем, может ли указанный пользователь прочитать файл
             stdin, stdout, stderr = ssh.exec_command(
                 f"sudo -u {username} cat {deploy_path}/index.html | head -n 1",
                 timeout=timeout
@@ -867,25 +717,21 @@ def deploy_nginx_config(
                 if error_read:
                     print(f"❌ Ошибка чтения файла {username}: {error_read}")
             
-            # Финальная перезагрузка Nginx
             stdin, stdout, stderr = ssh.exec_command("sudo systemctl reload nginx", timeout=timeout)
             exit_status = stdout.channel.recv_exit_status()
             if exit_status != 0:
                 error = safe_decode(stderr.read())
                 return False, f"Не удалось перезагрузить Nginx: {error}"
             
-            # Проверяем статус Nginx
             stdin, stdout, stderr = ssh.exec_command("sudo systemctl status nginx --no-pager | head -n 5", timeout=timeout)
             nginx_status_info = safe_decode(stdout.read()).strip()
             print(f"📊 Статус Nginx: {nginx_status_info}")
             
-            # Проверяем, что Nginx действительно работает
             stdin, stdout, stderr = ssh.exec_command("sudo systemctl is-active nginx", timeout=timeout)
             nginx_active = safe_decode(stdout.read()).strip()
             if nginx_active != 'active':
                 return False, f"Nginx не активен после перезагрузки. Статус: {nginx_active}"
             
-            # Проверяем логи Nginx на ошибки
             try:
                 stdin, stdout, stderr = ssh.exec_command(
                     "sudo tail -n 20 /var/log/nginx/error.log",
@@ -894,13 +740,11 @@ def deploy_nginx_config(
                 nginx_errors = safe_decode(stdout.read())
                 if nginx_errors:
                     print(f"⚠️ Последние ошибки Nginx:\n{nginx_errors}")
-                    # Если есть ошибки, возвращаем их в сообщении
                     if "502" in nginx_errors or "Bad Gateway" in nginx_errors or "Permission denied" in nginx_errors:
                         return False, f"Ошибка Nginx (502 Bad Gateway). Логи:\n{nginx_errors}\n\nПроверьте:\n1. Права доступа: sudo chmod 755 {deploy_path} && sudo chmod 644 {deploy_path}/index.html\n2. Владелец: sudo chown -R {username}:{username} {deploy_path}\n3. Логи: sudo tail -f /var/log/nginx/error.log"
             except Exception as e:
                 print(f"⚠️ Не удалось прочитать логи Nginx: {str(e)}")
             
-            # Проверяем, что CSS файл доступен через HTTP
             stdin, stdout, stderr = ssh.exec_command(
                 f"curl -I http://localhost/styles.css 2>&1 | head -n 5",
                 timeout=timeout
@@ -913,8 +757,6 @@ def deploy_nginx_config(
                 elif "200" in css_http_check or "OK" in css_http_check:
                     print(f"✓ CSS файл доступен через HTTP")
             
-            # Проверяем, что Nginx может получить доступ к файлам через конфиг
-            # Тестируем запрос к локальному серверу
             try:
                 stdin, stdout, stderr = ssh.exec_command(
                     f"curl -I http://localhost/ 2>&1 | head -n 5",

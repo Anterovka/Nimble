@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useCallback } from "react";
+import { createPortal } from "react-dom";
 import { useRouter } from "next/navigation";
 import { TEMPLATES } from "@/app/data/templates";
 import type { Template } from "@/app/data/templateTypes";
@@ -29,12 +30,18 @@ export function TemplateChoiceModal({
     if (!isOpen) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
+      // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
+      if (previewTemplate) return;
+      
       if (event.key === "Escape") {
         onClose();
       }
     };
 
     const handleClickOutside = (event: MouseEvent) => {
+      // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
+      if (previewTemplate) return;
+      
       if (!contentRef.current) return;
       if (!contentRef.current.contains(event.target as Node)) {
         onClose();
@@ -51,7 +58,7 @@ export function TemplateChoiceModal({
       document.removeEventListener("mousedown", handleClickOutside);
       document.body.style.overflow = previousOverflow;
     };
-  }, [isOpen, onClose]);
+  }, [isOpen, onClose, previewTemplate]);
 
   // Прокрутка колесиком мыши для body модального окна
   useEffect(() => {
@@ -93,9 +100,13 @@ export function TemplateChoiceModal({
     setPreviewTemplate(template);
   };
 
-  const closePreview = () => {
+  const closePreview = useCallback((e?: React.MouseEvent | MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     setPreviewTemplate(null);
-  };
+  }, []);
 
   // Оптимизированная загрузка HTML в iframe для карточек
   const loadCardPreview = useCallback((template: Template, iframe: HTMLIFrameElement | null) => {
@@ -157,22 +168,118 @@ ${previewTemplate.html}
     }
   }, [previewTemplate]);
 
+  // Обработка прокрутки для контейнера с iframe предпросмотра
+  useEffect(() => {
+    if (!previewTemplate) return;
+
+    const iframeContainer = previewIframeRef.current?.parentElement;
+    if (!iframeContainer) return;
+
+    const handleWheel = (e: WheelEvent) => {
+      const container = iframeContainer as HTMLElement;
+      const canScroll = container.scrollHeight > container.clientHeight;
+      
+      if (!canScroll) return;
+      
+      // Проверяем, не находимся ли мы на интерактивном элементе
+      const target = e.target as HTMLElement;
+      if (target && (target.tagName === 'INPUT' || target.tagName === 'SELECT' || target.tagName === 'BUTTON' || target.tagName === 'TEXTAREA')) {
+        return;
+      }
+      
+      // Проверяем границы прокрутки
+      const scrollTop = container.scrollTop;
+      const scrollHeight = container.scrollHeight;
+      const clientHeight = container.clientHeight;
+      const isAtTop = scrollTop <= 1;
+      const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
+      
+      if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+        return;
+      }
+      
+      // Прокручиваем контейнер
+      container.scrollTop += e.deltaY * 1.5;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    // Также обрабатываем прокрутку внутри iframe
+    const handleIframeWheel = (e: WheelEvent) => {
+      const iframe = previewIframeRef.current;
+      if (!iframe) return;
+      
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
+      if (!iframeDoc) return;
+      
+      const iframeBody = iframeDoc.body;
+      if (!iframeBody) return;
+      
+      const canScroll = iframeBody.scrollHeight > iframeBody.clientHeight;
+      if (!canScroll) {
+        // Если iframe не может прокручиваться, прокручиваем контейнер
+        const container = iframeContainer as HTMLElement;
+        if (container.scrollHeight > container.clientHeight) {
+          container.scrollTop += e.deltaY * 1.5;
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        return;
+      }
+      
+      // Прокручиваем внутри iframe
+      const scrollTop = iframeBody.scrollTop;
+      const scrollHeight = iframeBody.scrollHeight;
+      const clientHeight = iframeBody.clientHeight;
+      const isAtTop = scrollTop <= 1;
+      const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
+      
+      if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
+        return;
+      }
+      
+      iframeBody.scrollTop += e.deltaY * 1.5;
+      e.preventDefault();
+      e.stopPropagation();
+    };
+
+    iframeContainer.addEventListener("wheel", handleWheel, { passive: false, capture: true });
+    
+    // Обрабатываем прокрутку на самом iframe
+    const iframe = previewIframeRef.current;
+    if (iframe) {
+      iframe.addEventListener("wheel", handleIframeWheel, { passive: false, capture: true });
+    }
+
+    return () => {
+      iframeContainer.removeEventListener("wheel", handleWheel, { capture: true } as EventListenerOptions);
+      if (iframe) {
+        iframe.removeEventListener("wheel", handleIframeWheel, { capture: true } as EventListenerOptions);
+      }
+    };
+  }, [previewTemplate]);
+
   // Обработка Escape для закрытия модального окна предпросмотра
   useEffect(() => {
     if (!previewTemplate) return;
 
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
+        event.preventDefault();
+        event.stopPropagation();
         closePreview();
       }
     };
 
-    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("keydown", handleKeyDown, true);
+    const previousOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
 
     return () => {
-      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("keydown", handleKeyDown, true);
+      document.body.style.overflow = previousOverflow;
     };
-  }, [previewTemplate]);
+  }, [previewTemplate, closePreview]);
 
   // Intersection Observer для ленивой загрузки iframe
   useEffect(() => {
@@ -243,6 +350,8 @@ ${previewTemplate.html}
         className="editor-theme-modal__backdrop"
         aria-hidden="true"
         onClick={(e) => {
+          // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
+          if (previewTemplate) return;
           if (e.target === e.currentTarget) {
             onClose();
           }
@@ -262,7 +371,11 @@ ${previewTemplate.html}
           <button
             type="button"
             className="editor-theme-modal__close"
-            onClick={onClose}
+            onClick={(e) => {
+              // Если открыто модальное окно предпросмотра, не закрываем основное модальное окно
+              if (previewTemplate) return;
+              onClose();
+            }}
             aria-label="Закрыть модальное окно"
           >
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
@@ -302,10 +415,10 @@ ${previewTemplate.html}
                 {availableTemplates.map((template) => (
                   <div
                     key={template.id}
-                    className="bg-white/5 border border-white/10 rounded-lg overflow-hidden hover:bg-white/10 transition-colors"
+                    className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-colors flex flex-col"
                   >
                     {/* Preview iframe */}
-                    <div className="relative w-full h-40 bg-white/5 border-b border-white/10 overflow-hidden">
+                    <div className="relative w-full h-48 bg-white/5 border-b border-white/10 overflow-hidden">
                       <iframe
                         ref={(el) => {
                           if (el) {
@@ -326,26 +439,12 @@ ${previewTemplate.html}
                         title={`Preview ${template.name}`}
                         loading="lazy"
                       />
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          handlePreview(template);
-                        }}
-                        className="absolute inset-0 w-full h-full bg-black/40 hover:bg-black/20 transition-colors flex items-center justify-center group cursor-pointer"
-                      >
-                        <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 backdrop-blur-sm px-3 py-1.5 rounded-lg border border-white/20">
-                          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                            <circle cx="12" cy="12" r="3" />
-                          </svg>
-                        </div>
-                      </button>
                     </div>
                     
-                    <div className="p-4">
-                      <div className="font-semibold text-white mb-1">{template.name}</div>
-                      <div className="text-sm text-white/60 line-clamp-2 mb-3">{template.description}</div>
-                      <div className="flex items-center justify-between gap-2">
+                    <div className="p-6 flex flex-col flex-1">
+                      <h3 className="text-xl font-bold mb-2">{template.name}</h3>
+                      <p className="text-white/60 text-sm mb-4">{template.description}</p>
+                      <div className="flex items-center justify-between gap-2 mt-auto">
                         <span className="px-2 py-1 bg-white/10 text-white/80 text-xs rounded">
                           {template.category}
                         </span>
@@ -355,13 +454,13 @@ ${previewTemplate.html}
                               e.stopPropagation();
                               handlePreview(template);
                             }}
-                            className="px-3 py-1.5 border border-white/20 text-white rounded-lg text-xs font-semibold hover:border-white/40 hover:bg-white/5 transition-colors"
+                            className="px-3 py-2 border border-white/20 text-white rounded-lg text-sm font-semibold hover:border-white/40 hover:bg-white/5 transition-colors"
                           >
                             Превью
                           </button>
                           <button
                             onClick={() => handleTemplateSelect(template)}
-                            className="px-3 py-1.5 bg-white text-black rounded-lg text-xs font-semibold hover:bg-white/90 transition-colors"
+                            className="px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors"
                           >
                             Использовать
                           </button>
@@ -376,17 +475,49 @@ ${previewTemplate.html}
         </div>
       </div>
 
-      {/* Preview Modal */}
-      {previewTemplate && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
+      {/* Preview Modal - используем Portal для вынесения за пределы родительского модального окна */}
+      {previewTemplate && typeof window !== 'undefined' && createPortal(
+        <div 
+          className="fixed inset-0 flex items-center justify-center p-4"
+          style={{ 
+            zIndex: 99999,
+            pointerEvents: 'auto',
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0
+          }}
+        >
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-md"
-            onClick={closePreview}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              closePreview(e);
+            }}
+            onMouseDown={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+            }}
             aria-hidden="true"
+            style={{ 
+              pointerEvents: 'auto',
+              position: 'fixed',
+              top: 0,
+              left: 0,
+              right: 0,
+              bottom: 0
+            }}
           />
           <div
             className="relative bg-[rgba(8,10,18,0.96)] border border-white/10 rounded-2xl overflow-hidden shadow-2xl max-w-6xl w-full max-h-[90vh] flex flex-col"
             onClick={(e) => e.stopPropagation()}
+            style={{ 
+              pointerEvents: 'auto',
+              position: 'relative',
+              zIndex: 100000
+            }}
           >
             <div className="flex items-center justify-between p-6 border-b border-white/10">
               <div>
@@ -394,8 +525,13 @@ ${previewTemplate.html}
                 <p className="text-white/60 text-sm">{previewTemplate.description}</p>
               </div>
               <button
-                onClick={closePreview}
-                className="p-2 hover:bg-white/10 rounded-lg transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  closePreview();
+                }}
+                className="p-2 hover:bg-white/10 rounded-lg transition-colors cursor-pointer"
                 aria-label="Закрыть"
               >
                 <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
@@ -403,32 +539,42 @@ ${previewTemplate.html}
                 </svg>
               </button>
             </div>
-            <div className="flex-1 overflow-auto bg-white p-4">
+            <div className="flex-1 overflow-auto bg-white p-4 min-h-0" style={{ overflowY: 'auto' }}>
               <iframe
                 ref={previewIframeRef}
                 className="w-full h-full min-h-[600px] border-0 rounded-lg"
                 title={`Full preview ${previewTemplate.name}`}
+                style={{ pointerEvents: 'auto' }}
               />
             </div>
             <div className="p-6 border-t border-white/10 flex justify-end gap-3">
               <button
-                onClick={closePreview}
-                className="px-4 py-2 border border-white/20 text-white rounded-lg text-sm font-semibold hover:border-white/40 hover:bg-white/5 transition-colors"
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  closePreview();
+                }}
+                className="px-4 py-2 border border-white/20 text-white rounded-lg text-sm font-semibold hover:border-white/40 hover:bg-white/5 transition-colors cursor-pointer"
               >
                 Закрыть
               </button>
               <button
-                onClick={() => {
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  e.stopPropagation();
                   closePreview();
                   handleTemplateSelect(previewTemplate);
                 }}
-                className="px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors"
+                className="px-4 py-2 bg-white text-black rounded-lg text-sm font-semibold hover:bg-white/90 transition-colors cursor-pointer"
               >
                 Использовать шаблон
               </button>
             </div>
           </div>
-        </div>
+        </div>,
+        document.body
       )}
     </div>
   );
