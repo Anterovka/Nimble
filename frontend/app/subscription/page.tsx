@@ -239,7 +239,7 @@ export default function SubscriptionPage() {
         </div>
 
         <div className="mt-12 text-center text-white/60">
-          <p>Вопросы? <Link href="/" className="text-white hover:underline">Свяжитесь с нами</Link></p>
+          <p>Вопросы? <Link href="https://t.me/pavelsurron" className="text-white hover:underline">Свяжитесь с нами</Link></p>
         </div>
       </div>
     </div>

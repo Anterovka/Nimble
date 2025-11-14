@@ -1,10 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { useRouter, usePathname } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "@/app/context/AuthContext";
-import Link from "next/link";
-import { motion } from "framer-motion";
 import { TEMPLATES } from "@/app/data/templates";
 import type { Template } from "@/app/data/templateTypes";
 import { StaticStarField } from "@/app/components/StaticStarField";
@@ -12,7 +10,6 @@ import { AppHeader } from "@/app/components/AppHeader";
 
 export default function TemplatesPage() {
   const router = useRouter();
-  const pathname = usePathname();
   const { isAuthenticated } = useAuth();
   const [selectedCategory, setSelectedCategory] = useState<string>("Все");
   const [previewTemplate, setPreviewTemplate] = useState<Template | null>(null);
@@ -36,7 +33,6 @@ export default function TemplatesPage() {
     localStorage.setItem("nimble-template", JSON.stringify(template));
     router.push("/editor?template=" + template.id);
   };
-
 
   const handlePreview = (template: Template) => {
     setPreviewTemplate(template);
@@ -144,7 +140,7 @@ ${template.html}
           {filteredTemplates.map((template) => (
             <div
               key={template.id}
-              className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-colors"
+              className="bg-white/5 border border-white/10 rounded-xl overflow-hidden hover:bg-white/10 transition-colors flex flex-col"
             >
               {/* Preview iframe */}
               <div className="relative w-full h-48 bg-white/5 border-b border-white/10 overflow-hidden">
@@ -161,23 +157,12 @@ ${template.html}
                   style={{ transform: 'scale(0.5)', transformOrigin: 'top left', width: '200%', height: '200%' }}
                   title={`Preview ${template.name}`}
                 />
-                <button
-                  onClick={() => handlePreview(template)}
-                  className="absolute inset-0 w-full h-full bg-black/40 hover:bg-black/20 transition-colors flex items-center justify-center group cursor-pointer"
-                >
-                  <div className="opacity-0 group-hover:opacity-100 transition-opacity bg-white/10 backdrop-blur-sm px-4 py-2 rounded-lg border border-white/20">
-                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-white">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                      <circle cx="12" cy="12" r="3" />
-                    </svg>
-                  </div>
-                </button>
               </div>
               
-              <div className="p-6">
+              <div className="p-6 flex flex-col flex-1">
                 <h3 className="text-xl font-bold mb-2">{template.name}</h3>
                 <p className="text-white/60 text-sm mb-4">{template.description}</p>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex items-center justify-between gap-2 mt-auto">
                   <span className="px-2 py-1 bg-white/10 text-white/80 text-xs rounded">
                     {template.category}
                   </span>
@@ -204,7 +189,7 @@ ${template.html}
 
       {/* Preview Modal */}
       {previewTemplate && (
-        <div className="fixed inset-0 z-200 flex items-center justify-center p-4">
+        <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div
             className="fixed inset-0 bg-black/80 backdrop-blur-md"
             onClick={closePreview}

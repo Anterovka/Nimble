@@ -19,9 +19,6 @@ interface Interaction {
 }
 
 const INTERACTION_TYPES = [
-  { value: 'hover', label: 'При наведении' },
-  { value: 'focus', label: 'При фокусе' },
-  { value: 'active', label: 'При нажатии' },
   { value: 'visited', label: 'Посещенная ссылка' },
   { value: 'click', label: 'При клике' },
 ] as const;
@@ -37,7 +34,7 @@ const ACTION_TYPES = [
 export function InteractionsPanel({ editor, selectedComponent }: InteractionsPanelProps) {
   const [interactions, setInteractions] = useState<Interaction[]>([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newInteractionType, setNewInteractionType] = useState<'hover' | 'focus' | 'active' | 'visited' | 'click'>('hover');
+  const [newInteractionType, setNewInteractionType] = useState<'hover' | 'focus' | 'active' | 'visited' | 'click'>('click');
   const [newActionType, setNewActionType] = useState<'link' | 'anchor' | 'scroll' | 'modal' | 'custom'>('link');
   const [newActionValue, setNewActionValue] = useState<string>('');
   const [editingId, setEditingId] = useState<string | null>(null);
