@@ -51,15 +51,8 @@ class ProjectViewSet(viewsets.ModelViewSet):
             if self.action == 'list':
                 queryset = queryset.filter(user=self.request.user)
         else:
-            queryset = queryset.filter(is_published=True, is_public=True)
-        
-        is_public = self.request.query_params.get('is_public', None)
-        if is_public is not None:
-            queryset = queryset.filter(is_public=is_public.lower() == 'true')
-        
-        is_published = self.request.query_params.get('is_published', None)
-        if is_published is not None:
-            queryset = queryset.filter(is_published=is_published.lower() == 'true')
+            # Неавторизованные пользователи не могут видеть проекты
+            queryset = queryset.none()
         
         return queryset
     
@@ -68,15 +61,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
         obj = super().get_object()
         
         if self.request.user.is_authenticated and obj.user == self.request.user:
-            return obj
-        
-        if not self.request.user.is_authenticated:
-            if obj.is_published and obj.is_public:
-                return obj
-            from rest_framework.exceptions import NotFound
-            raise NotFound("Проект не найден или недоступен")
-        
-        if obj.is_published and obj.is_public:
             return obj
         
         from rest_framework.exceptions import PermissionDenied
@@ -123,10 +107,10 @@ class ProjectViewSet(viewsets.ModelViewSet):
     
     def get_permissions(self):
         """Права доступа в зависимости от действия"""
-        if self.action in ['list', 'retrieve', 'preview', 'export', 'by_slug', 'public_view', 'published_list']:
-            # Просмотр доступен всем
-            return [AllowAny()]
-        elif self.action in ['create', 'update', 'partial_update', 'destroy', 'publish', 'unpublish', 'duplicate']:
+        if self.action in ['list', 'retrieve', 'preview', 'export']:
+            # Просмотр требует авторизации
+            return [IsAuthenticated()]
+        elif self.action in ['create', 'update', 'partial_update', 'destroy', 'duplicate']:
             # Изменение требует авторизации
             return [IsAuthenticated()]
         return super().get_permissions()
@@ -200,86 +184,6 @@ class ProjectViewSet(viewsets.ModelViewSet):
             response['Content-Disposition'] = f'attachment; filename="{project.slug}.html"'
             return response
     
-    @action(detail=False, methods=['get'], url_path='by-slug/(?P<slug>[^/.]+)', permission_classes=[AllowAny])
-    def by_slug(self, request, slug=None):
-        """
-        Получить проект по slug (только опубликованные публичные)
-        """
-        project = get_object_or_404(
-            Project,
-            slug=slug,
-            is_published=True,
-            is_public=True
-        )
-        serializer = self.get_serializer(project)
-        return Response(serializer.data)
-    
-    @action(detail=False, methods=['get'], url_path='public/(?P<slug>[^/.]+)', permission_classes=[AllowAny])
-    def public_view(self, request, slug=None):
-        """
-        Публичный просмотр опубликованного проекта (HTML страница)
-        """
-        project = get_object_or_404(
-            Project,
-            slug=slug,
-            is_published=True,
-            is_public=True
-        )
-        
-        # Увеличиваем счетчик просмотров
-        project.views_count += 1
-        project.save(update_fields=['views_count'])
-        
-        html = f"""<!DOCTYPE html>
-<html lang="ru">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="{project.description or project.title}">
-    <title>{project.title}</title>
-    <style>
-        {project.css_content}
-    </style>
-</head>
-<body>
-    {project.html_content}
-</body>
-</html>"""
-        
-        return HttpResponse(html, content_type='text/html; charset=utf-8')
-    
-    @action(detail=True, methods=['post'], url_path='publish', permission_classes=[IsAuthenticated])
-    def publish(self, request, pk=None):
-        """
-        Опубликовать проект (только владелец)
-        """
-        project = self.get_object()
-        if project.user != request.user:
-            return Response(
-                {"detail": "У вас нет прав для публикации этого проекта"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        project.is_published = True
-        project.save()
-        serializer = self.get_serializer(project)
-        return Response(serializer.data)
-    
-    @action(detail=True, methods=['post'], url_path='unpublish', permission_classes=[IsAuthenticated])
-    def unpublish(self, request, pk=None):
-        """
-        Снять проект с публикации (только владелец)
-        """
-        project = self.get_object()
-        if project.user != request.user:
-            return Response(
-                {"detail": "У вас нет прав для снятия с публикации этого проекта"},
-                status=status.HTTP_403_FORBIDDEN
-            )
-        project.is_published = False
-        project.save()
-        serializer = self.get_serializer(project)
-        return Response(serializer.data)
-    
     @action(detail=True, methods=['post'], url_path='duplicate', permission_classes=[IsAuthenticated])
     def duplicate(self, request, pk=None):
         """
@@ -309,28 +213,11 @@ class ProjectViewSet(viewsets.ModelViewSet):
             json_content=original_project.json_content,
             header_settings=original_project.header_settings,
             footer_settings=original_project.footer_settings,
-            is_published=False,
-            is_public=original_project.is_public,
         )
         
         serializer = self.get_serializer(new_project)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
     
-    @action(detail=False, methods=['get'], url_path='published', permission_classes=[AllowAny])
-    def published_list(self, request):
-        """
-        Список всех опубликованных публичных проектов (галерея)
-        """
-        projects = Project.objects.filter(is_published=True, is_public=True).order_by('-published_at', '-created_at')
-        
-        # Пагинация
-        page = self.paginate_queryset(projects)
-        if page is not None:
-            serializer = ProjectListSerializer(page, many=True)
-            return self.get_paginated_response(serializer.data)
-        
-        serializer = ProjectListSerializer(projects, many=True)
-        return Response(serializer.data)
 
 
 # Views для авторизации

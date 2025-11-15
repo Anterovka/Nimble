@@ -47,11 +47,8 @@ docker-compose up
 
 ### Проекты
 **CRUD:** `GET|POST|PUT|PATCH|DELETE /projects/`
-- `POST /projects/{id}/publish/` - Публикация
 - `POST /projects/{id}/duplicate/` - Дублирование
 - `GET /projects/{id}/export/` - Экспорт (HTML/JSON)
-- `GET /projects/published/` - Галерея
-- `GET /projects/public/{slug}/` - Публичный просмотр
 
 ### Блоки (только суперпользователи)
 **CRUD:** `GET|POST|PUT|PATCH|DELETE /blocks/`
@@ -66,7 +63,7 @@ docker-compose up
 - `user`, `title`, `slug` (уникален в рамках пользователя)
 - `html_content`, `css_content`, `json_content`
 - `header_settings`, `footer_settings`
-- `is_published`, `is_public`, `views_count`
+- `views_count`
 - `deployed_url`, `deployed_at`
 
 ### CustomBlock

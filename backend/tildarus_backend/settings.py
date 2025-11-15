@@ -37,6 +37,7 @@ INSTALLED_APPS = [
     'rest_framework_simplejwt',
     'corsheaders',
     'api',
+    'telegram_bot',
 ]
 
 MIDDLEWARE = [

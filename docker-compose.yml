@@ -1,7 +1,6 @@
 version: '3.8'
 
 services:
-  # База данных MySQL
   db:
     image: mysql:8.0
     container_name: nimble_mysql
@@ -24,7 +23,6 @@ services:
     networks:
       - nimble_network
 
-  # Backend (Django)
   backend:
     build:
       context: ./backend
@@ -57,11 +55,8 @@ services:
       start_period: 40s
     networks:
       - nimble_network
-    # Entrypoint скрипт выполнит миграции и создаст суперпользователя
-    # CMD переопределяется для запуска gunicorn
     command: gunicorn --bind 0.0.0.0:8000 --workers 4 --timeout 120 --access-logfile - --error-logfile - tildarus_backend.wsgi:application
 
-  # Frontend (Next.js)
   frontend:
     build:
       context: ./frontend

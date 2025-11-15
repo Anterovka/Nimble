@@ -1083,8 +1083,6 @@ function EditorContent() {
           json_content: componentsSnapshot as Record<string, unknown>,
           header_settings: headerSettings as unknown as Record<string, unknown>,
           footer_settings: footerSettings as unknown as Record<string, unknown>,
-          is_published: false,
-          is_public: true,
         });
       }
       

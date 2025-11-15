@@ -25,7 +25,6 @@ export default function ProfilePage() {
 
   const projectsArray = Array.isArray(projects) ? projects : [];
   const totalProjects = projectsArray.length;
-  const publishedCount = projectsArray.filter((p) => p.is_published).length;
   const deployedCount = projectsArray.filter((p) => p.deployed_url && p.deployed_url.trim() !== '').length;
   const deployedProjects = projectsArray.filter((p) => p.deployed_url && p.deployed_url.trim() !== '');
   const recentProjects = projectsArray.slice(0, 6);
@@ -438,13 +437,6 @@ ${project.html_content || ''}
                           <h3 className="text-xl font-bold mb-1">{project.title}</h3>
                           {project.description && (
                             <p className="text-white/60 text-sm mb-2 line-clamp-2">{project.description}</p>
-                          )}
-                        </div>
-                        <div className="flex items-center gap-2">
-                          {project.is_published && (
-                            <span className="px-2 py-1 bg-green-500/20 text-green-400 text-xs rounded border border-green-500/30">
-                              Опубликован
-                            </span>
                           )}
                         </div>
                       </div>

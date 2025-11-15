@@ -24,8 +24,6 @@ class ProjectSerializer(serializers.ModelSerializer):
             'json_content',
             'header_settings',
             'footer_settings',
-            'is_published',
-            'is_public',
             'views_count',
             'deploy_type',
             'deployed_url',
@@ -33,9 +31,8 @@ class ProjectSerializer(serializers.ModelSerializer):
             'subdomain',
             'created_at',
             'updated_at',
-            'published_at',
         ]
-        read_only_fields = ['id', 'user', 'views_count', 'created_at', 'updated_at', 'published_at']
+        read_only_fields = ['id', 'user', 'views_count', 'created_at', 'updated_at']
     
     def validate_slug(self, value: str) -> str:
         """Валидация slug"""
@@ -58,8 +55,6 @@ class ProjectListSerializer(serializers.ModelSerializer):
             'title',
             'slug',
             'description',
-            'is_published',
-            'is_public',
             'views_count',
             'deploy_type',
             'deployed_url',
@@ -85,8 +80,6 @@ class ProjectCreateSerializer(serializers.ModelSerializer):
             'json_content',
             'header_settings',
             'footer_settings',
-            'is_published',
-            'is_public',
         ]
     
     def create(self, validated_data):

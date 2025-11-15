@@ -237,7 +237,7 @@ export default function SubscriptionPage() {
         </div>
 
         <div className="mt-12 text-center text-white/60">
-          <p>Вопросы? <Link href="ССЫЛКУ СЮДА" className="text-white hover:underline">Свяжитесь с нами</Link></p>
+          <p>Вопросы? <Link href="https://t.me/NimbleSupportBot" className="text-white hover:underline">Свяжитесь с нами</Link></p>
         </div>
       </div>
     </div>

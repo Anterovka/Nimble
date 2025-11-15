@@ -8,3 +8,4 @@ gunicorn==21.2.0
 paramiko==3.4.0
 mysqlclient==2.2.0
 aiogram==3.13.1
+

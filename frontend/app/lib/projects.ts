@@ -11,14 +11,11 @@ export interface Project {
   json_content: Record<string, unknown>;
   header_settings: Record<string, unknown>;
   footer_settings: Record<string, unknown>;
-  is_published: boolean;
-  is_public: boolean;
   views_count: number;
   deployed_url?: string;
   deployed_at?: string;
   created_at: string;
   updated_at: string;
-  published_at?: string;
 }
 
 export interface ProjectListItem {
@@ -27,8 +24,6 @@ export interface ProjectListItem {
   title: string;
   slug: string;
   description?: string;
-  is_published: boolean;
-  is_public: boolean;
   views_count: number;
   deployed_url?: string;
   deployed_at?: string;
@@ -45,8 +40,6 @@ export interface CreateProjectData {
   json_content?: Record<string, unknown>;
   header_settings?: Record<string, unknown>;
   footer_settings?: Record<string, unknown>;
-  is_published?: boolean;
-  is_public?: boolean;
 }
 
 export interface UpdateProjectData extends Partial<CreateProjectData> {}
@@ -79,14 +72,3 @@ export async function duplicateProject(id: number): Promise<Project> {
   return apiClient.post<Project>(`/projects/${id}/duplicate/`);
 }
 
-export async function publishProject(id: number): Promise<Project> {
-  return apiClient.post<Project>(`/projects/${id}/publish/`);
-}
-
-export async function unpublishProject(id: number): Promise<Project> {
-  return apiClient.post<Project>(`/projects/${id}/unpublish/`);
-}
-
-export async function getPublishedProjects(): Promise<ProjectListItem[]> {
-  return apiClient.get<ProjectListItem[]>('/projects/published/');
-}

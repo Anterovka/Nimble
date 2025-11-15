@@ -22,22 +22,18 @@ class ProjectAdmin(admin.ModelAdmin):
         'slug',
         'deploy_type_display',
         'deployed_status',
-        'is_published',
-        'is_public',
         'views_count',
         'created_at',
         'updated_at'
     ]
     list_filter = [
-        'is_published',
-        'is_public',
         'deploy_type',
         'user',
         'created_at',
         'deployed_at'
     ]
     search_fields = ['title', 'slug', 'description', 'user__username', 'subdomain', 'deployed_url']
-    readonly_fields = ['created_at', 'updated_at', 'published_at', 'views_count']
+    readonly_fields = ['created_at', 'updated_at', 'views_count']
     fieldsets = (
         ('Основная информация', {
             'fields': ('user', 'title', 'slug', 'description')
@@ -55,9 +51,6 @@ class ProjectAdmin(admin.ModelAdmin):
                 'deployed_at',
                 'subdomain'
             )
-        }),
-        ('Публикация', {
-            'fields': ('is_published', 'is_public', 'published_at')
         }),
         ('Даты', {
             'fields': ('created_at', 'updated_at')
