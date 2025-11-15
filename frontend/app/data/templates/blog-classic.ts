@@ -1,3 +1,4 @@
+// классический блог шаблон
 import type { Template } from '../templateTypes';
 
 export const blogClassicTemplate: Template = {

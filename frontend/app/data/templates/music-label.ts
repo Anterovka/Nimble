@@ -1,3 +1,4 @@
+// музыкальный лейбл шаблон
 import type { Template } from '../templateTypes';
 
 export const musicLabelTemplate: Template = {

@@ -1,3 +1,4 @@
+// заголовок приложения с навигацией
 "use client";
 
 import { useState, useEffect, useMemo } from "react";

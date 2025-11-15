@@ -42,7 +42,7 @@ export default function Home() {
             Nimble — конструктор сайтов
             <br />
             <span className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl text-white/80">
-              без кода и ограничений
+              без кода
             </span>
           </motion.h1>
           <motion.p
@@ -50,7 +50,7 @@ export default function Home() {
             {...getFadeInAnimation(0.2)}
           >
             Создавайте профессиональные сайты визуально с помощью мощного редактора.
-            Готовые шаблоны, настройка Header/Footer, управление проектами и публикация в один клик.
+            Готовые шаблоны, управление проектами и экспорт в HTML/CSS.
           </motion.p>
           <motion.div
             className="flex flex-col sm:flex-row gap-3 md:gap-4 justify-center items-center px-2"
@@ -315,15 +315,6 @@ export default function Home() {
               Перейти в конструктор
             </Link>
           </motion.div>
-          <motion.p
-            className="text-sm text-white/50 mt-6"
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            transition={{ duration: 0.5, delay: 0.3, ease: "easeOut" }}
-          >
-            Пробно •  Без ограничений
-          </motion.p>
         </div>
       </AnimatedSection>
 

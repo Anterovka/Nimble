@@ -1,3 +1,4 @@
+// современный лендинг шаблон
 import type { Template } from '../templateTypes';
 
 export const landingModernTemplate: Template = {

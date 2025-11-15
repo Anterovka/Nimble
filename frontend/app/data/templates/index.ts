@@ -1,3 +1,4 @@
+// экспорт всех шаблонов
 import { blankWhiteTemplate } from './blank-white';
 import { landingModernTemplate } from './landing-modern';
 import { portfolioMinimalTemplate } from './portfolio-minimal';

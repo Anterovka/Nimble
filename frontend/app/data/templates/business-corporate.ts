@@ -1,3 +1,4 @@
+// корпоративный бизнес шаблон
 import type { Template } from '../templateTypes';
 
 export const businessCorporateTemplate: Template = {

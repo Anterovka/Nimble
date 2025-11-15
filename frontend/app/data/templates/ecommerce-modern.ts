@@ -1,3 +1,4 @@
+// современный магазин шаблон
 import type { Template } from '../templateTypes';
 
 export const ecommerceModernTemplate: Template = {

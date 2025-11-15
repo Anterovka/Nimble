@@ -1,3 +1,4 @@
+// минималистичное портфолио шаблон
 import type { Template } from '../templateTypes';
 
 export const portfolioMinimalTemplate: Template = {

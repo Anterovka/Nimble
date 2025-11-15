@@ -1,3 +1,4 @@
+// модальное окно авторизации (вход/регистрация)
 "use client";
 
 import { useState, useEffect, useRef } from 'react';

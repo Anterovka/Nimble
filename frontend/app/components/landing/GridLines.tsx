@@ -1,3 +1,4 @@
+// Анимированные линии сетки с узлами
 "use client";
 
 import { motion } from "framer-motion";

@@ -1,3 +1,4 @@
+// экспорт компонентов редактора
 export { HeaderFooterModal } from "./HeaderFooterModal";
 export { HTMLStructure } from "./HTMLStructure";
 export { ExportPreviewModal } from "./ExportPreviewModal";

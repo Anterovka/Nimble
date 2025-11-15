@@ -1,3 +1,4 @@
+// Модальное окно экспорта HTML и CSS проекта
 "use client";
 
 import { useEffect, useRef, useState, startTransition } from "react";
@@ -203,7 +204,6 @@ ${formattedHtml.split('\n').map(line => '  ' + line).join('\n')}
             </button>
           </div>
 
-          {/* Контент вкладок - прокручиваемая область */}
           <div className="flex-1 flex flex-col min-h-0 mb-4 overflow-hidden">
             {activeTab === "html" && (
               <div 

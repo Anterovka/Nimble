@@ -1,3 +1,4 @@
+// Панель отображения HTML структуры элементов
 "use client";
 
 import { useEffect, useRef, useState } from "react";

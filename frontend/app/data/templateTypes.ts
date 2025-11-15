@@ -1,3 +1,4 @@
+// типы для шаблонов
 export interface Template {
   id: string;
   name: string;

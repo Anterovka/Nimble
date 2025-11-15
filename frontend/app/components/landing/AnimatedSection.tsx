@@ -1,3 +1,4 @@
+// анимированная секция с появлением при скролле
 "use client";
 
 import { motion, useInView } from "framer-motion";

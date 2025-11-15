@@ -1,3 +1,4 @@
+// всплывающая панель быстрых стилей при выборе элемента
 "use client";
 
 import { useEffect, useRef, useState } from "react";

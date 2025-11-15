@@ -1,3 +1,4 @@
+// Селектор тем для выбранного элемента
 "use client";
 
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";

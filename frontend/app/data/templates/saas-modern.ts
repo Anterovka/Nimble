@@ -1,3 +1,4 @@
+// современный SaaS шаблон
 import type { Template } from '../templateTypes';
 
 export const saasModernTemplate: Template = {

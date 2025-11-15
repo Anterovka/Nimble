@@ -1,3 +1,4 @@
+// Панель настройки взаимодействий элементов (клики)
 "use client";
 
 import { useEffect, useState } from "react";

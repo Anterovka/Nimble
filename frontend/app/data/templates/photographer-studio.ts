@@ -1,3 +1,4 @@
+// фотограф студия шаблон
 import type { Template } from '../templateTypes';
 
 export const photographerStudioTemplate: Template = {

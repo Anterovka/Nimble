@@ -1,3 +1,4 @@
+// Страница профиля с проектами пользователя
 "use client";
 
 import { useEffect, useState, useRef } from "react";

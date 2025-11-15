@@ -1,3 +1,4 @@
+// образовательная платформа шаблон
 import type { Template } from '../templateTypes';
 
 export const educationPlatformTemplate: Template = {

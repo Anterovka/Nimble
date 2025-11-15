@@ -1,3 +1,4 @@
+// экспорт компонентов лендинга
 export { StarField } from "./StarField";
 export { GridLines } from "./GridLines";
 export { BackgroundGrid } from "./BackgroundGrid";

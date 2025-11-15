@@ -1,3 +1,4 @@
+// карточка с полупрозрачным фоном
 "use client";
 
 interface StrictCardProps {

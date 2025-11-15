@@ -1,3 +1,4 @@
+// Модальное окно выбора цветовой палитры проекта
 "use client";
 
 import { useEffect, useRef } from "react";

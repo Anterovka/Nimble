@@ -1,3 +1,4 @@
+// Секция шагов создания сайта с анимацией
 "use client";
 
 import { motion, useScroll, useTransform } from "framer-motion";

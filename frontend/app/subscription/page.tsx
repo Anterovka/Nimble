@@ -1,3 +1,4 @@
+// Страница управления подпиской
 "use client";
 
 import { useEffect, useState } from "react";
@@ -10,6 +11,7 @@ import { Notification } from "@/app/components/Notification";
 import { AppHeader } from "@/app/components/AppHeader";
 
 export default function SubscriptionPage() {
+  // Состояния компонента
   const router = useRouter();
   const { isAuthenticated, isLoading } = useAuth();
   const [subscription, setSubscription] = useState<Subscription | null>(null);
@@ -22,6 +24,7 @@ export default function SubscriptionPage() {
     action?: { label: string; href: string };
   } | null>(null);
 
+  // Эффект проверки авторизации и загрузки подписки
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
       router.push("/");
@@ -33,6 +36,7 @@ export default function SubscriptionPage() {
     }
   }, [isAuthenticated, isLoading, router]);
 
+  // Функции загрузки и обновления подписки
   const loadSubscription = async () => {
     try {
       setLoading(true);
@@ -67,6 +71,7 @@ export default function SubscriptionPage() {
     }
   };
 
+  // Условия загрузки и авторизации
   if (isLoading || loading) {
     return (
       <div className="min-h-screen bg-linear-to-b from-[#050505] to-[#000000] flex items-center justify-center">
@@ -79,10 +84,12 @@ export default function SubscriptionPage() {
     return null;
   }
 
+  // Вычисляемые значения
   const isPremium = subscription?.subscription_type === 'premium';
   const projectLimit = subscription?.project_limit === -1 ? '∞' : subscription?.project_limit || 3;
   const currentCount = subscription?.current_project_count || 0;
 
+  // Рендер
   return (
     <div className="min-h-screen bg-linear-to-b from-[#050505] to-[#000000] text-white relative">
       {notification && (
@@ -98,11 +105,13 @@ export default function SubscriptionPage() {
       <AppHeader />
 
       <div className="w-full max-w-7xl mx-auto px-4 md:px-8 pt-24 pb-16 relative z-10">
+        {/* Заголовок */}
         <div className="text-center mb-4">
           <h1 className="text-5xl font-bold mb-4">Планы подписки</h1>
           <p className="text-white/60 text-lg">Выберите план, который подходит вам</p>
         </div>
 
+        {/* Ошибки */}
         {error && (
           <div className="max-w-2xl mx-auto mb-4 p-4 bg-red-500/20 border border-red-500/50 rounded-lg text-red-200">
             {error}
@@ -140,7 +149,7 @@ export default function SubscriptionPage() {
           </div>
         )}
 
-        {/* Планы */}
+        {/* Планы подписки */}
         <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
           {/* Пробный план */}
           <div className={`bg-white/5 border rounded-xl p-8 flex flex-col ${isPremium ? 'border-white/10' : 'border-white/20'}`}>
@@ -236,6 +245,7 @@ export default function SubscriptionPage() {
           </div>
         </div>
 
+        {/* Контакты поддержки */}
         <div className="mt-12 text-center text-white/60">
           <p>Вопросы? <Link href="https://t.me/NimbleSupportBot" className="text-white hover:underline">Свяжитесь с нами</Link></p>
         </div>

@@ -1,3 +1,4 @@
+// фитнес тренер шаблон
 import type { Template } from '../templateTypes';
 
 export const fitnessCoachTemplate: Template = {

@@ -1,3 +1,4 @@
+// Панель выбора и применения цветовых тем проекта
 "use client";
 
 import { useCallback, useEffect, useState } from "react";

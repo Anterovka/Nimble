@@ -1,3 +1,4 @@
+// Компонент уведомлений
 "use client";
 
 import { useEffect, useState } from "react";

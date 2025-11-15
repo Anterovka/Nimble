@@ -1,5 +1,6 @@
 "use client";
 
+// Импорты
 import { Suspense, startTransition, useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import "grapesjs/dist/css/grapes.min.css";
@@ -20,12 +21,15 @@ import { Notification } from "@/app/components/Notification";
 
 
 function EditorContent() {
+  // Хуки и параметры
   const router = useRouter();
   const searchParams = useSearchParams();
   const projectId = searchParams.get('project');
   const templateId = searchParams.get('template');
   const isBlank = searchParams.get('blank') === 'true';
   const { isAuthenticated, isLoading, user, logout } = useAuth();
+  
+  // Состояния компонента
   const [authModalOpen, setAuthModalOpen] = useState(false);
   const [authModalMode, setAuthModalMode] = useState<'login' | 'register'>('login');
   const [currentProject, setCurrentProject] = useState<Project | null>(null);
@@ -61,6 +65,7 @@ function EditorContent() {
   const [rightPanelTab, setRightPanelTab] = useState<'style' | 'settings' | 'interactions'>('style');
   const rightPanelContentRef = useRef<HTMLDivElement>(null);
   
+  // Callback функции
   const updateTopbarHeight = useCallback(() => {
     if (topbarRef.current) {
       const rect = topbarRef.current.getBoundingClientRect();
@@ -71,6 +76,7 @@ function EditorContent() {
     }
   }, []);
 
+  // Настройки header и footer
   const [headerSettings, setHeaderSettings] = useState<HeaderSettings>({
      logo: "",
      companyName: "Nimble",
@@ -85,7 +91,8 @@ function EditorContent() {
     textColor: "#ffffff",
     copyright: "© 2025 Nimble",
   });
- 
+
+  // Утилиты для мобильных подсказок
  function showMobileHint(message: string) {
    let hint = document.getElementById('mobile-block-hint');
    if (!hint) {
@@ -110,9 +117,11 @@ function EditorContent() {
    }
  }
  
+  // Refs для настроек
  const headerSettingsRef = useRef(headerSettings);
  const footerSettingsRef = useRef(footerSettings);
 
+  // Эффекты синхронизации refs
   useEffect(() => {
     headerSettingsRef.current = {
       ...headerSettings,
@@ -121,6 +130,7 @@ function EditorContent() {
     footerSettingsRef.current = footerSettings;
   }, [headerSettings, footerSettings]);
 
+  // Эффект расчета высоты хедера
   useEffect(() => {
     const updateHeight = () => {
       requestAnimationFrame(() => {
@@ -155,6 +165,7 @@ function EditorContent() {
     };
   }, [updateTopbarHeight]);
 
+  // Эффект показа левой панели на десктопе
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -166,28 +177,25 @@ function EditorContent() {
     }
   }, []);
 
-  // Показываем модальное окно выбора шаблонов при создании нового проекта
+  // Эффект показа модального окна выбора шаблонов
   useEffect(() => {
     if (!isAuthenticated || isLoading) return;
     if (projectId || templateId || isBlank) return;
     
-    // Проверяем, есть ли сохраненные данные в localStorage
     const hasStoredData = typeof window !== 'undefined' && (
       localStorage.getItem("gjs-components") || 
       localStorage.getItem("gjs-css")
     );
     
-    // Если нет сохраненных данных и нет параметров - показываем модальное окно
     if (!hasStoredData) {
       setShowTemplateChoice(true);
     }
   }, [isAuthenticated, isLoading, projectId, templateId, isBlank]);
 
-  // Загрузка проекта, шаблона или создание с нуля
+  // Эффект загрузки проекта, шаблона или создания с нуля
   useEffect(() => {
     if (!isAuthenticated || !editorInstance) return;
     
-    // Загрузка проекта
     if (projectId) {
       const numericProjectId = Number(projectId);
       if (isNaN(numericProjectId) || numericProjectId <= 0) {
@@ -226,10 +234,8 @@ function EditorContent() {
           try {
             editorInstance.store();
           } catch {
-            // Игнорируем ошибки store - они не критичны
           }
         } catch (error) {
-          // Обработка ошибок загрузки проекта
           if (error) {
             const errorMessage = error instanceof Error 
               ? error.message 
@@ -250,38 +256,30 @@ function EditorContent() {
       return;
     }
     
-    // Загрузка шаблона
     if (templateId && typeof window !== 'undefined') {
       const templateStr = localStorage.getItem('nimble-template');
       if (templateStr) {
         try {
           const template = JSON.parse(templateStr);
           
-          // Ждем полной инициализации редактора перед загрузкой шаблона
           const loadTemplate = () => {
-            // Проверяем, что редактор готов
             if (!editorInstance.Components || typeof editorInstance.getComponents !== 'function') {
               setTimeout(loadTemplate, 100);
               return;
             }
             
-            // Сначала очищаем стили и компоненты
             editorInstance.setStyle("");
             editorInstance.setComponents("");
             
-            // Небольшая задержка для завершения очистки
             setTimeout(() => {
-              // Затем загружаем HTML
               if (template.html) {
                 editorInstance.setComponents(template.html);
               }
               
-              // Затем загружаем CSS
               if (template.css) {
                 editorInstance.addStyle(template.css);
               }
               
-              // Сохраняем в localStorage после небольшой задержки
               setTimeout(() => {
                 editorInstance.store();
                 localStorage.removeItem('nimble-template');
@@ -298,7 +296,6 @@ function EditorContent() {
       return;
     }
     
-    // Создание с нуля (только header/footer)
     if (isBlank) {
       editorInstance.setComponents('');
       editorInstance.setStyle('');
@@ -306,10 +303,12 @@ function EditorContent() {
     }
   }, [isAuthenticated, projectId, templateId, isBlank, editorInstance]);
 
+  // Обработчики выбора шаблона
   const handleChooseBlank = () => {
     router.push('/editor?blank=true');
   };
 
+  // Эффект инициализации редактора
   useEffect(() => {
     if (isLoading || !isAuthenticated) {
       return;
@@ -366,7 +365,6 @@ function EditorContent() {
       editor.on("load", handleLoad);
       markReadyIfHasContent(editor);
 
-      // Track selected component for inline style panel
       const handleComponentSelected = (component: GrapesComponent) => {
         setSelectedComponent(component);
       };
@@ -425,7 +423,7 @@ function EditorContent() {
     };
   }, [isLoading, isAuthenticated]);
 
-  // Блокировка прокрутки body при открытых панелях на мобильных
+  // Эффект блокировки прокрутки body
   useEffect(() => {
     if (isMobileMode && (showLeftPanel || showRightPanel)) {
       document.body.style.overflow = "hidden";
@@ -437,17 +435,14 @@ function EditorContent() {
     };
   }, [showLeftPanel, showRightPanel, isMobileMode]);
 
-  // Настройка мобильной вставки блоков
+  // Эффект настройки мобильной вставки блоков
   useEffect(() => {
     if (!editorReady || !editorInstance || !isMobileMode) return;
 
     const editor = editorInstance;
-    
-    // Отключаем drag & drop на мобильных
     const blocksContainer = document.querySelector('.blocks-container');
     if (!blocksContainer) return;
 
-    // Обработчик клика на блок
     const handleBlockClick = (e: Event) => {
       const target = e.target as HTMLElement;
       const blockEl = target.closest('.gjs-block');
@@ -456,19 +451,15 @@ function EditorContent() {
       e.preventDefault();
       e.stopPropagation();
 
-      // Получаем ID блока из различных источников
       let blockId: string | null = null;
 
-      // Способ 0: из пользовательского data-атрибута
       blockId = blockEl.getAttribute('data-block-id');
  
-      // Способ 1: из data-атрибута
       if (!blockId) {
         blockId = blockEl.getAttribute('data-gjs-type') || 
                   blockEl.getAttribute('data-type');
       }
  
-      // Способ 2: из ID элемента (GrapesJS создает ID вида "gjs-block-{id}")
       if (!blockId) {
         const idAttr = blockEl.getAttribute('id');
         if (idAttr && idAttr.startsWith('gjs-block-')) {
@@ -476,7 +467,6 @@ function EditorContent() {
         }
       }
       
-      // Способ 3: находим по label в BlockManager
       if (!blockId) {
         const labelEl = blockEl.querySelector('.gjs-block-label');
         if (labelEl) {
@@ -495,53 +485,42 @@ function EditorContent() {
       }
 
       if (blockId) {
-        // Убираем выделение с других блоков
         document.querySelectorAll('.gjs-block.selected-mobile').forEach(el => {
           el.classList.remove('selected-mobile');
         });
 
-        // Выделяем выбранный блок
         blockEl.classList.add('selected-mobile');
         setSelectedBlock(blockId);
 
-        // Добавляем класс режима вставки на canvas
         const canvas = document.querySelector('.gjs-cv-canvas');
         if (canvas) {
           canvas.classList.add('mobile-insert-mode');
         }
 
-        // Автоматически закрываем панель блоков на мобильных
         setTimeout(() => {
           setShowLeftPanel(false);
         }, 100);
 
-        // Показываем подсказку
         showMobileHint('Коснитесь области редактора для вставки блока');
       }
     };
 
-    // Обработчик клика на canvas для вставки блока
     const handleCanvasClick = (e: Event) => {
       if (!selectedBlock || !editor) return;
 
-      // Предотвращаем стандартное поведение
       e.preventDefault();
       e.stopPropagation();
       e.stopImmediatePropagation();
 
-      // Получаем блок из BlockManager
       const blockModel = editor.BlockManager.get(selectedBlock);
       if (!blockModel) return;
  
-      // Получаем контент блока
       let blockContent: unknown = blockModel.get('content');
        
-       // Преобразуем объект в строку HTML
-       if (typeof blockContent === 'object' && blockContent !== null) {
+      if (typeof blockContent === 'object' && blockContent !== null) {
         const contentObject = blockContent as Record<string, unknown>;
         if (contentObject.type === 'image') {
           const src = typeof contentObject.src === 'string' ? contentObject.src : '';
-          // Для галереи изображений добавляем 3 изображения
           if (selectedBlock === 'image-gallery') {
             blockContent = `<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;"><img src="${src}" style="width:100%;height:auto;border-radius:12px;object-fit:cover;" alt="Изображение 1"><img src="${src}" style="width:100%;height:auto;border-radius:12px;object-fit:cover;" alt="Изображение 2"><img src="${src}" style="width:100%;height:auto;border-radius:12px;object-fit:cover;" alt="Изображение 3"></div>`;
           } else {
@@ -558,12 +537,10 @@ function EditorContent() {
        
       if (typeof blockContent !== 'string' || blockContent.trim().length === 0) return;
  
-       // Добавляем компонент
       editor.select([]);
       const added = editor.addComponents(blockContent) as GrapesComponent | GrapesComponent[];
       const newComponent = Array.isArray(added) ? added[added.length - 1] : added;
        
-       // Выделяем новый элемент
       setTimeout(() => {
         if (newComponent) {
           editor.select(newComponent);
@@ -572,7 +549,6 @@ function EditorContent() {
         }
       }, 150);
  
-       // Сбрасываем режим вставки
       document.querySelectorAll('.gjs-block.selected-mobile').forEach(el => {
         el.classList.remove('selected-mobile');
       });
@@ -581,7 +557,6 @@ function EditorContent() {
       hideMobileHint();
     };
 
-    // Блокируем выбор компонентов в режиме вставки
     const handleComponentSelected = () => {
       if (selectedBlock) {
         editor.select([]);
@@ -590,27 +565,23 @@ function EditorContent() {
     
     editor.on('component:selected', handleComponentSelected);
     
-    // Обработчик на document для перехвата всех кликов
     const handleDocumentClick = (e: Event) => {
       if (!selectedBlock) return;
       
       const target = e.target as HTMLElement;
       const frame = document.querySelector('.gjs-frame');
       
-      // Если клик внутри frame, обрабатываем как вставку блока
       if (frame && frame.contains(target)) {
         handleCanvasClick(e);
       }
     };
     
-    // Добавляем обработчики
     setTimeout(() => {
       blocksContainer.addEventListener('click', handleBlockClick, true);
       document.addEventListener('click', handleDocumentClick, true);
       document.addEventListener('touchend', handleDocumentClick, true);
     }, 300);
 
-    // Очистка при размонтировании
     return () => {
       blocksContainer.removeEventListener('click', handleBlockClick, true);
       document.removeEventListener('click', handleDocumentClick, true);
@@ -619,6 +590,7 @@ function EditorContent() {
     };
   }, [editorReady, isMobileMode, selectedBlock, editorInstance]);
 
+  // Эффект поиска и фильтрации блоков
   useEffect(() => {
     if (!editorReady || !editorInstance) {
       return;
@@ -746,7 +718,7 @@ function EditorContent() {
     };
   }, [editorReady, editorInstance, blockSearch]);
 
-  // Обработка прокрутки колесиком для правой панели
+  // Эффект обработки прокрутки колесиком для правой панели
   useEffect(() => {
     if (!showRightPanel) return;
     
@@ -759,7 +731,6 @@ function EditorContent() {
       
       if (!canScroll) return;
       
-      // Проверяем, не находимся ли мы на интерактивном элементе
       const targetElement = e.target as HTMLElement;
       if (!targetElement) return;
       
@@ -773,28 +744,24 @@ function EditorContent() {
                            targetElement.isContentEditable;
       
       if (isInteractive) {
-        return; // Не перехватываем событие на интерактивных элементах
+        return;
       }
       
-      // Проверяем, достигли ли мы границ прокрутки
       const scrollTop = target.scrollTop;
       const scrollHeight = target.scrollHeight;
       const clientHeight = target.clientHeight;
       const isAtTop = scrollTop <= 1;
       const isAtBottom = scrollTop >= scrollHeight - clientHeight - 1;
       
-      // Если прокрутка вверх и мы наверху, или вниз и мы внизу - не перехватываем
       if ((e.deltaY < 0 && isAtTop) || (e.deltaY > 0 && isAtBottom)) {
         return;
       }
       
-      // Прокручиваем с увеличенной скоростью
       target.scrollTop += e.deltaY * 1.5;
       e.preventDefault();
       e.stopPropagation();
     };
 
-    // Используем capture фазу для перехвата события раньше
     panelContent.addEventListener("wheel", handleWheel, { passive: false, capture: true });
 
     return () => {
@@ -802,6 +769,7 @@ function EditorContent() {
     };
   }, [showRightPanel, rightPanelTab, editorReady]);
 
+  // Эффект загрузки сообщения о последнем сохранении
   useEffect(() => {
     if (typeof window === "undefined") {
       return;
@@ -821,6 +789,7 @@ function EditorContent() {
     }
   }, []);
 
+  // Эффект генерации HTML для предпросмотра
   useEffect(() => {
     if (!isPreviewOpen) {
       startTransition(() => {
@@ -839,6 +808,7 @@ function EditorContent() {
     });
   }, [isPreviewOpen, editorInstance]);
 
+  // Эффект записи HTML в iframe предпросмотра
   useEffect(() => {
     if (!isPreviewOpen || !previewHtml || !previewIframeRef.current) return;
     const iframe = previewIframeRef.current;
@@ -850,6 +820,7 @@ function EditorContent() {
     }
   }, [isPreviewOpen, previewHtml]);
 
+  // Эффект блокировки прокрутки при открытом предпросмотре
   useEffect(() => {
     if (!isPreviewOpen) {
       return;
@@ -861,6 +832,7 @@ function EditorContent() {
     };
   }, [isPreviewOpen]);
 
+  // Обработчики предпросмотра
   const handleOpenPreview = () => {
     if (!editorInstance) return;
     setPreviewDevice("desktop");
@@ -879,6 +851,7 @@ function EditorContent() {
     setTimeout(() => URL.revokeObjectURL(url), 60_000);
   };
 
+  // Обработчики сохранения
   const handleSave = async () => {
     if (!editorInstance) return;
     
@@ -915,7 +888,6 @@ function EditorContent() {
       }
     }
     
-    // Если проект уже существует, сохраняем его
     if (currentProject && isAuthenticated) {
       setSaveStatus("saving");
       try {
@@ -930,8 +902,6 @@ function EditorContent() {
         const componentsSnapshot = componentCollection && typeof componentCollection.toJSON === "function"
           ? componentCollection.toJSON()
           : componentCollection ?? [];
-        
-        // Сохранение проекта
         
         const updatedProject = await updateProject(currentProject.id, {
           html_content: htmlSnapshot,
@@ -967,11 +937,9 @@ function EditorContent() {
       return;
     }
     
-    // Если проекта нет, открываем модальное окно для сохранения
     if (isAuthenticated) {
       setShowSaveModal(true);
     } else {
-      // Локальное сохранение для неавторизованных
       setSaveStatus("saving");
       try {
         const maybePromise = editorInstance.store();
@@ -1015,12 +983,12 @@ function EditorContent() {
     }
   };
 
+  // Обработчик сохранения проекта с данными
   const handleSaveProject = async (data: { title: string; slug: string; description?: string }) => {
     if (!editorInstance) return;
     
     setSaveStatus("saving");
     try {
-      // Проверяем подписку перед созданием нового проекта
       if (!currentProject) {
         try {
           const subscription = await getSubscription();
@@ -1042,7 +1010,6 @@ function EditorContent() {
           }
         } catch (subError) {
           console.error("Ошибка проверки подписки", subError);
-          // Продолжаем создание проекта, если не удалось проверить подписку
         }
       }
       
@@ -1061,7 +1028,6 @@ function EditorContent() {
       let project: Project;
       
       if (currentProject && currentProject.id) {
-        // Обновляем существующий проект
         project = await updateProject(currentProject.id, {
           title: data.title,
           slug: data.slug,
@@ -1073,7 +1039,6 @@ function EditorContent() {
           footer_settings: footerSettings as unknown as Record<string, unknown>,
         });
       } else {
-        // Создаем новый проект
         project = await createProject({
           title: data.title,
           slug: data.slug,
@@ -1088,7 +1053,6 @@ function EditorContent() {
       
       setCurrentProject(project);
       
-      // Обновляем URL, чтобы при следующем сохранении проект был найден
       if (project.id && typeof project.id === 'number' && !isNaN(project.id) && project.id > 0) {
         router.replace(`/editor?project=${project.id}`, { scroll: false });
       }
@@ -1108,7 +1072,6 @@ function EditorContent() {
     } catch (error: any) {
       console.error("Ошибка сохранения проекта", error);
       
-      // Обработка ошибок валидации (например, дублирующийся slug)
       let errorMessage = "Не удалось сохранить проект. Попробуйте ещё раз.";
       
       if (error?.slug && Array.isArray(error.slug)) {
@@ -1134,6 +1097,7 @@ function EditorContent() {
     }
   };
 
+  // Обработчики очистки канваса
   const handleClearCanvas = () => {
     setShowClearConfirm(true);
   };
@@ -1164,9 +1128,7 @@ function EditorContent() {
     hideMobileHint();
   };
 
-  // НЕ сбрасываем выбор при закрытии панели - выбор сохраняется для вставки
-
-  // Блокировка прокрутки body при открытых панелях на мобильных
+  // Эффект блокировки прокрутки при открытых панелях
   useEffect(() => {
     if (showLeftPanel || showRightPanel) {
       document.body.style.overflow = 'hidden';
@@ -1178,7 +1140,7 @@ function EditorContent() {
     };
   }, [showLeftPanel, showRightPanel]);
 
-  // Обработка Escape для модального окна подтверждения очистки
+  // Эффект обработки Escape для модального окна очистки
   useEffect(() => {
     if (!showClearConfirm) return;
 
@@ -1197,7 +1159,7 @@ function EditorContent() {
     };
   }, [showClearConfirm]);
 
-  // Если не авторизован, показываем экран с требованием авторизации
+  // Вычисляемые значения
   const userInitial = user?.username?.[0]?.toUpperCase() ?? user?.email?.[0]?.toUpperCase() ?? "A";
   const panelStyle = { height: `calc(100vh - ${topbarHeight}px)`, top: `${topbarHeight}px` };
   const overlayStyle = { top: `${topbarHeight}px` };
@@ -1210,6 +1172,7 @@ function EditorContent() {
           ? "Ошибка"
           : "Сохранить";
  
+  // Рендер экрана авторизации
   if (!isLoading && !isAuthenticated) {
     return (
       <div className="h-screen flex items-center justify-center bg-linear-to-b from-[#050505] to-[#000000] text-white">
@@ -1248,7 +1211,6 @@ function EditorContent() {
         <AuthModal
           isOpen
           onClose={() => {
-            // Если пользователь закрывает модальное окно без авторизации, перенаправляем на главную
             router.push('/');
           }}
           initialMode={authModalMode}
@@ -1257,7 +1219,7 @@ function EditorContent() {
     );
   }
 
-  // Показываем загрузку, пока проверяем авторизацию
+  // Рендер экрана загрузки
   if (isLoading) {
     return (
       <div className="h-screen flex items-center justify-center bg-[#050505] text-white">
@@ -1269,8 +1231,10 @@ function EditorContent() {
     );
   }
 
+  // Основной рендер редактора
   return (
     <>
+      {/* Уведомления */}
       {notification && (
         <Notification
           message={notification.message}
@@ -1280,9 +1244,9 @@ function EditorContent() {
           duration={8000}
         />
       )}
+      {/* Хедер редактора */}
       <div className="fixed inset-0 flex flex-col bg-gradient-to-br from-[#1a1a22] via-[#101016] to-[#09090d] text-slate-50 overflow-hidden">
       <header ref={topbarRef} className="bg-[rgba(10,10,14,0.82)] border-b border-white/6 shadow-[0_18px_46px_rgba(3,3,5,0.65)] backdrop-blur-[28px] backdrop-saturate-[185%] transition-all duration-300 relative z-[60]">
-        {/* Первая строка: логотип, кнопки управления (на ПК) и аватарка с выходом */}
         <div className="flex items-center justify-between px-3 min-[610px]:px-[clamp(18px,3.6vw,36px)] py-2 min-[610px]:py-[clamp(14px,2.6vw,22px)] gap-2 min-[610px]:gap-[clamp(18px,3vw,32px)]">
           <div className="flex items-center gap-2 min-[810px]:gap-[clamp(16px,2vw,26px)] min-w-0">
             <Link href="/" className="inline-flex items-center justify-center w-[clamp(40px,4vw,52px)] h-[clamp(40px,4vw,52px)] rounded-[14px] bg-transparent border-none shadow-none transition-transform duration-[250ms] hover:-translate-y-0.5 flex-shrink-0" aria-label="На главную">
@@ -1316,9 +1280,7 @@ function EditorContent() {
             </div>
           </div>
           
-          {/* Кнопки управления - на ПК в первой строке, на мобильных во второй */}
           <div className="hidden min-[610px]:flex items-center gap-2 min-[610px]:gap-[clamp(12px,1.8vw,20px)] flex-wrap">
-            {/* Кнопка сохранения */}
             <button
               type="button"
               className={`inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border-transparent transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none ${
@@ -1340,7 +1302,6 @@ function EditorContent() {
               </svg>
             </button>
 
-            {/* Кнопка предпросмотра */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1355,7 +1316,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Предпросмотр</span>
             </button>
 
-            {/* Кнопка экспорта */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1375,7 +1335,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Экспорт</span>
             </button>
 
-            {/* Кнопка деплоя */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1395,7 +1354,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Развернуть на сервере</span>
             </button>
 
-            {/* Кнопка палитр */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 min-[810px]:px-[18px] py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1409,7 +1367,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Палитры</span>
             </button>
 
-            {/* Кнопка очистки */}
             <button
               type="button"
               className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border border-red-400/35 bg-red-500/15 text-red-200 shadow-[0_8px_16px_rgba(239,68,68,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-red-400/50 hover:bg-red-500/25 hover:text-red-100 hover:shadow-[0_8px_16px_rgba(239,68,68,0.066)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1428,7 +1385,6 @@ function EditorContent() {
             </button>
           </div>
           
-          {/* Аватарка и выход - справа в первой строке */}
           {user && (
             <div className="editor-user-group">
               <Link
@@ -1462,9 +1418,7 @@ function EditorContent() {
             </div>
           )}
         </div>
-        {/* Вторая строка: кнопки управления только на мобильных */}
         <div className="flex items-center gap-2 px-3 pb-2 max-[610px]:justify-center min-[610px]:hidden flex-wrap">
-            {/* Кнопка сохранения */}
             <button
               type="button"
               className={`inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border-transparent transition-all duration-200 hover:-translate-y-0.5 disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none ${
@@ -1486,7 +1440,6 @@ function EditorContent() {
               </svg>
             </button>
 
-            {/* Кнопка предпросмотра */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1501,7 +1454,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Предпросмотр</span>
             </button>
 
-            {/* Кнопка экспорта */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1521,7 +1473,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Экспорт</span>
             </button>
 
-            {/* Кнопка деплоя */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1541,7 +1492,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Развернуть на сервере</span>
             </button>
 
-            {/* Кнопка палитр */}
             <button
               type="button"
               className="inline-flex items-center justify-center gap-2 px-3 py-2.5 rounded-xl border border-white/16 bg-white/4 text-slate-50/82 text-[13px] font-medium tracking-[0.01em] transition-all duration-200 hover:-translate-y-0.5 hover:border-white/32 hover:bg-white/8 hover:text-white shadow-[0_8px_16px_rgba(255,255,255,0.04)] hover:shadow-[0_8px_16px_rgba(255,255,255,0.044)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1555,7 +1505,6 @@ function EditorContent() {
               <span className="hidden min-[1310px]:inline">Палитры</span>
             </button>
 
-            {/* Кнопка очистки */}
             <button
               type="button"
               className="inline-flex items-center justify-center w-[38px] h-[38px] rounded-xl border border-red-400/35 bg-red-500/15 text-red-200 shadow-[0_8px_16px_rgba(239,68,68,0.06)] transition-all duration-200 hover:-translate-y-0.5 hover:border-red-400/50 hover:bg-red-500/25 hover:text-red-100 hover:shadow-[0_8px_16px_rgba(239,68,68,0.066)] disabled:opacity-45 disabled:cursor-not-allowed disabled:transform-none"
@@ -1584,8 +1533,9 @@ function EditorContent() {
         )}
       </header>
 
+      {/* Тело редактора */}
       <div className="editor-body flex-1 flex overflow-hidden relative">
-        {/* Левая вертикальная панель с иконками (Webflow style) */}
+        {/* Левая боковая панель с иконками */}
         <div className="editor-left-sidebar" style={{ top: `${topbarHeight}px`, height: `calc(100vh - ${topbarHeight}px)` }}>
           <div className="editor-sidebar-icons">
             <button
@@ -1615,7 +1565,7 @@ function EditorContent() {
           </div>
         </div>
 
-        {/* Панель элементов (открывается слева) */}
+        {/* Панель элементов (левая) */}
         <aside
           className={`editor-panel editor-panel--left webflow-style ${showLeftPanel ? "is-open" : ""}`}
           style={panelStyle}
@@ -1666,6 +1616,7 @@ function EditorContent() {
           </div>
         </aside>
 
+        {/* Канвас редактора */}
         <div className="editor-canvas" style={{ position: "relative" }}>
           <div ref={editorRef} className="gjs-editor h-full w-full"></div>
           {editorReady && editorInstance && selectedComponent && (
@@ -1676,6 +1627,7 @@ function EditorContent() {
           )}
         </div>
 
+        {/* Панель стилей (правая) */}
         <aside
           className={`editor-panel editor-panel--right webflow-style ${showRightPanel ? "is-open" : ""}`}
           style={panelStyle}
@@ -1754,6 +1706,7 @@ function EditorContent() {
           </div>
         </aside>
 
+        {/* Оверлей для мобильных панелей */}
         {(showLeftPanel || showRightPanel) && (
           <div
             className="editor-panel-overlay md:hidden"
@@ -1766,6 +1719,7 @@ function EditorContent() {
         )}
       </div>
  
+       {/* Кнопка отмены вставки блока на мобильных */}
        {selectedBlock && isMobileMode && (
          <button
            type="button"
@@ -1780,7 +1734,7 @@ function EditorContent() {
          </button>
        )}
 
-
+      {/* Модальные окна */}
       {editorReady && editorInstance && (
         <ExportPreviewModal
           isOpen={showExportPreview}
@@ -1809,6 +1763,7 @@ function EditorContent() {
         />
       )}
 
+      {/* Модальное окно сохранения проекта */}
       <SaveProjectModal
         isOpen={showSaveModal}
         onClose={() => setShowSaveModal(false)}
@@ -1819,6 +1774,7 @@ function EditorContent() {
         isSaving={saveStatus === "saving"}
       />
 
+      {/* Модальное окно авторизации */}
       <AuthModal
         isOpen={authModalOpen}
         onClose={() => {
@@ -1827,12 +1783,14 @@ function EditorContent() {
         initialMode={authModalMode}
       />
 
+      {/* Модальное окно выбора шаблона */}
       <TemplateChoiceModal
         isOpen={showTemplateChoice}
         onClose={() => setShowTemplateChoice(false)}
         onChooseBlank={handleChooseBlank}
       />
 
+      {/* Модальное окно подтверждения очистки */}
       {showClearConfirm && (
         <div className="fixed inset-0 z-[200] flex items-center justify-center p-4">
           <div 
@@ -1883,6 +1841,7 @@ function EditorContent() {
         </div>
       )}
  
+       {/* Оверлей предпросмотра */}
        {isPreviewOpen && (
          <div className="editor-preview-overlay">
           <div className="editor-preview-topbar">
@@ -1943,6 +1902,7 @@ function EditorContent() {
   );
 }
 
+// Утилиты для предпросмотра
 function buildPreviewDocument(html: string, css: string) {
   return `<!DOCTYPE html>
 <html lang="ru">
@@ -1960,6 +1920,7 @@ ${html}
 </html>`;
 }
 
+// Утилиты форматирования
 function formatSaveTimestamp(timestamp: string): string | null {
   const date = new Date(timestamp);
   if (Number.isNaN(date.getTime())) {
@@ -1974,6 +1935,7 @@ function formatSaveTimestamp(timestamp: string): string | null {
   return formatter.format(date);
 }
 
+// Экспорт компонента
 export default function Editor() {
   return (
     <Suspense fallback={

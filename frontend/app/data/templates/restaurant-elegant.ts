@@ -1,3 +1,4 @@
+// элегантный ресторан шаблон
 import type { Template } from '../templateTypes';
 
 export const restaurantElegantTemplate: Template = {

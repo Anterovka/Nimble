@@ -1,3 +1,4 @@
+// креативное портфолио шаблон
 import type { Template } from '../templateTypes';
 
 export const creativePortfolioTemplate: Template = {

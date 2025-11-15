@@ -1,3 +1,4 @@
+// Статичные звезды
 "use client";
 
 import { useState, useEffect } from "react";

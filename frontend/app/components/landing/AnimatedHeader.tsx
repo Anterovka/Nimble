@@ -1,3 +1,4 @@
+// анимированный заголовок лендинга с навигацией
 "use client";
 
 import { motion, useScroll } from "framer-motion";

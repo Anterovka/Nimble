@@ -1,3 +1,4 @@
+// модальное окно настройки шапки и подвала сайта
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -210,7 +211,6 @@ export function HeaderFooterModal({
           </div>
           </div>
 
-          {/* Кнопки - прилипнуты к низу */}
           <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 pt-4 border-t border-white/10 bg-[rgba(8,10,18,0.98)] sticky bottom-0 z-10" style={{ marginTop: 'auto', paddingTop: '1rem', paddingBottom: '1rem' }}>
             <button
               onClick={onApply}

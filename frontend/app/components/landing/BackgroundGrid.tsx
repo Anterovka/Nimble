@@ -1,3 +1,4 @@
+// Фоновый грид для лендинга
 "use client";
 
 interface BackgroundGridProps {

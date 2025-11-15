@@ -1,3 +1,4 @@
+// форма регистрации нового аккаунта
 "use client";
 
 import { useState, useMemo } from 'react';
@@ -67,7 +68,7 @@ export function RegisterForm({ onSuccess, onSwitchToLogin }: RegisterFormProps) 
       });
       onSuccess?.();
     } catch (err) {
-      // Обрабатываем ошибки от API
+      // Обработчик ошибок от API
       if (err instanceof Error) {
         setError(err.message);
       } else if (typeof err === 'object' && err !== null && 'message' in err) {

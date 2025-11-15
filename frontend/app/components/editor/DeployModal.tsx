@@ -1,3 +1,4 @@
+// Модальное окно развертывания проекта на VPS
 "use client";
 
 import { useState, useEffect, useRef } from "react";
@@ -692,7 +693,6 @@ export function DeployModal({ isOpen, onClose, editor, projectId }: DeployModalP
                 </>
               )}
 
-              {/* Кнопки деплоя - показываются всегда */}
               <div className="flex gap-3 pt-4">
                 <button
                   onClick={onClose}

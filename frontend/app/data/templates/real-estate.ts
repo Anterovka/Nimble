@@ -1,3 +1,4 @@
+// недвижимость шаблон
 import type { Template } from '../templateTypes';
 
 export const realEstateTemplate: Template = {
